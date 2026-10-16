@@ -262,6 +262,16 @@ static Sections Split(const string& text)
 	return sec;
 }
 
+//Tests where Fuse's expected results predate newer hardware research - ZxCpu deliberately differs (verified with z80test 1.2a):
+//interrupted INIR/INDR/OTIR/OTDR/CPDR set H, P/V, F3 and F5 differently, and repeating INIR/INDR set MEMPTR to PC+1
+static const std::map<string, string> KnownDeviations = {
+	{ "edb2_1", "F,F3/F5,MEMPTR" },
+	{ "edb3_1", "F" },
+	{ "edb9_2", "F3/F5" },
+	{ "edba_1", "MEMPTR" },
+	{ "edbb_1", "F" },
+};
+
 static const char* RegNames[] = { "AF", "BC", "DE", "HL", "AF'", "BC'", "DE'", "HL'", "IX", "IY", "SP", "PC", "MEMPTR", "I", "R", "IFF1", "IFF2", "IM", "halted", "tstates" };
 
 int main(int argc, char** argv)
@@ -284,7 +294,7 @@ int main(int argc, char** argv)
 	vector<TestCase> tests = ParseInput(argv[1]);
 	std::map<string, string> expected = ParseExpected(argv[2]);
 
-	int passed = 0, failed = 0;
+	int passed = 0, failed = 0, known = 0;
 	std::map<string, vector<string>> failuresByKind;
 
 	for(TestCase& t : tests) {
@@ -310,7 +320,6 @@ int main(int argc, char** argv)
 			continue;
 		}
 
-		failed++;
 		Sections a = Split(actual);
 		Sections e = Split(it->second);
 		vector<string> kinds;
@@ -346,6 +355,14 @@ int main(int argc, char** argv)
 		for(string& k : kinds) {
 			kindStr += (kindStr.empty() ? "" : ",") + k;
 		}
+
+		auto deviation = KnownDeviations.find(t.Name);
+		if(deviation != KnownDeviations.end() && deviation->second == kindStr) {
+			known++;
+			continue;
+		}
+
+		failed++;
 		failuresByKind[kindStr].push_back(t.Name);
 
 		if(verbose) {
@@ -353,7 +370,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	printf("%d passed, %d failed\n", passed, failed);
+	printf("%d passed, %d known deviations from Fuse, %d failed\n", passed, known, failed);
 	for(auto& kv : failuresByKind) {
 		printf("  [%s] %d:", kv.first.c_str(), (int)kv.second.size());
 		for(size_t i = 0; i < kv.second.size() && i < 24; i++) {

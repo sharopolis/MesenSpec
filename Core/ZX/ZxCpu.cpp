@@ -779,6 +779,9 @@ void ZxCpu::BlockIN()
 	if(repeat && _state.B != 0) {
 		InternalCycles(_regHL, 5);
 		_state.PC -= 2;
+		//Like LDIR/CPIR, a repeating INIR/INDR leaves PC+1 in WZ (verified by z80test 1.2a's MEMPTR test).
+		//TODOZX: OTIR/OTDR probably do the same, but no test covers it yet - they keep Fuse's behavior for now.
+		_state.WZ = _state.PC + 1;
 		UpdateInOutRepeatFlags(val);
 	}
 
@@ -1004,7 +1007,7 @@ void ZxCpu::LD_IR(uint8_t& dst, uint8_t value)
 {
 	dst = value;
 
-	SetStandardFlags<0xE4>(value);
+	SetStandardFlags<0xE8>(value);
 	SetFlagState(ZxCpuFlags::Parity, _state.IFF2);
 	ClearFlag(ZxCpuFlags::HalfCarry);
 	ClearFlag(ZxCpuFlags::AddSub);

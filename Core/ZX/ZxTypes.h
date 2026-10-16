@@ -3,6 +3,43 @@
 #include "Shared/BaseState.h"
 #include "Shared/MemoryType.h"
 
+enum class ZxModel
+{
+	Spectrum48K,
+};
+
+//Frame/ULA timing for a model, in T-states (CPU clock cycles)
+struct ZxTiming
+{
+	uint32_t CpuClockRate;
+	uint32_t FrameLength;
+	uint16_t LineLength;
+	//Frame line on which the first line of the paper (bitmap) area starts - pixel (0,0) is displayed at FirstPaperLine * LineLength
+	uint16_t FirstPaperLine;
+	//First T-state at which memory contention applies (one before pixel (0,0) is fetched)
+	uint32_t ContentionStart;
+	//Number of T-states the ULA holds /INT low at the start of each frame
+	uint8_t IrqLength;
+
+	static ZxTiming Get(ZxModel model)
+	{
+		switch(model) {
+			default:
+			case ZxModel::Spectrum48K: return { 3500000, 69888, 224, 64, 14335, 32 };
+		}
+	}
+};
+
+namespace ZxConstants
+{
+	//Output picture: 256x192 paper area surrounded by a 48 pixel border
+	constexpr uint32_t BorderWidth = 48;
+	constexpr uint32_t BorderHeight = 48;
+	constexpr uint32_t ScreenWidth = 256 + BorderWidth * 2;
+	constexpr uint32_t ScreenHeight = 192 + BorderHeight * 2;
+	constexpr uint32_t PixelCount = ScreenWidth * ScreenHeight;
+}
+
 struct ZxCpuState : public BaseState
 {
 	//Total number of T-states executed since power on
