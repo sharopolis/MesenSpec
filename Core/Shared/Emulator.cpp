@@ -34,6 +34,7 @@
 #include "Gameboy/Gameboy.h"
 #include "PCE/PceConsole.h"
 #include "SMS/SmsConsole.h"
+#include "ZX/ZxConsole.h"
 #include "GBA/GbaConsole.h"
 #include "WS/WsConsole.h"
 #include "Debugger/Debugger.h"
@@ -609,6 +610,7 @@ void Emulator::TryLoadRom(VirtualFile& romFile, LoadRomResult& result, unique_pt
 	TryLoadRom<SmsConsole>(romFile, result, console, useFileSignature);
 	TryLoadRom<GbaConsole>(romFile, result, console, useFileSignature);
 	TryLoadRom<WsConsole>(romFile, result, console, useFileSignature);
+	TryLoadRom<ZxConsole>(romFile, result, console, useFileSignature);
 }
 
 template<typename T>
@@ -1132,6 +1134,11 @@ void Emulator::ResetDebugger(bool startDebugger)
 
 void Emulator::InitDebugger()
 {
+	if(_consoleType == ConsoleType::Zx) {
+		//TODOZX debugger: the ZX Spectrum has no debugger yet - debugger API calls get no debugger and return defaults
+		return;
+	}
+
 	if(!_debugger) {
 		//Lock to make sure we don't try to start debuggers in 2 separate threads at once
 		auto lock = _debuggerLock.AcquireSafe();

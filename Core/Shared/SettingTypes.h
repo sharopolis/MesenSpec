@@ -276,7 +276,10 @@ enum class ControllerType
 	//WS
 	WsController,
 	WsControllerVertical,
-	Pcv2Controller
+	Pcv2Controller,
+
+	//ZX Spectrum
+	ZxKeyboard
 };
 
 struct KeyMapping
@@ -400,7 +403,8 @@ enum class ConsoleType
 	PcEngine = 3,
 	Sms = 4,
 	Gba = 5,
-	Ws = 6
+	Ws = 6,
+	Zx = 7
 };
 
 enum class GameboyModel
@@ -854,6 +858,20 @@ struct WsConfig
 	uint32_t Channel5Vol = 100;
 };
 
+enum class ZxModel : uint8_t
+{
+	Spectrum48K,
+};
+
+struct ZxConfig
+{
+	ControllerConfig Keyboard;
+
+	ZxModel Model = ZxModel::Spectrum48K;
+
+	uint32_t BeeperVolume = 100;
+};
+
 struct AudioPlayerConfig
 {
 	uint32_t Volume = 100;
@@ -1178,4 +1196,5 @@ enum class DebuggerFlags
 	SmsDebuggerEnabled = (1 << 10),
 	GbaDebuggerEnabled = (1 << 11),
 	WsDebuggerEnabled = (1 << 12),
+	ZxDebuggerEnabled = (1 << 13),
 };

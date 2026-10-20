@@ -2067,6 +2067,57 @@ E
 			<Value ID="SmsController">SMS Controller</Value>
 			<Value ID="SmsLightPhaser">Light Phaser</Value>
 			<Value ID="ColecoVisionController">ColecoVision Controller</Value>
+
+			<Value ID="ZxKeyboard">ZX Spectrum Keyboard</Value>
+		</Enum>
+		<Enum ID="ZxKeyboardButtons">
+			<Value ID="CapsShift">Key - CAPS SHIFT</Value>
+			<Value ID="Z">Key - Z</Value>
+			<Value ID="X">Key - X</Value>
+			<Value ID="C">Key - C</Value>
+			<Value ID="V">Key - V</Value>
+			<Value ID="A">Key - A</Value>
+			<Value ID="S">Key - S</Value>
+			<Value ID="D">Key - D</Value>
+			<Value ID="F">Key - F</Value>
+			<Value ID="G">Key - G</Value>
+			<Value ID="Q">Key - Q</Value>
+			<Value ID="W">Key - W</Value>
+			<Value ID="E">Key - E</Value>
+			<Value ID="R">Key - R</Value>
+			<Value ID="T">Key - T</Value>
+			<Value ID="Num1">Key - 1</Value>
+			<Value ID="Num2">Key - 2</Value>
+			<Value ID="Num3">Key - 3</Value>
+			<Value ID="Num4">Key - 4</Value>
+			<Value ID="Num5">Key - 5</Value>
+			<Value ID="Num0">Key - 0</Value>
+			<Value ID="Num9">Key - 9</Value>
+			<Value ID="Num8">Key - 8</Value>
+			<Value ID="Num7">Key - 7</Value>
+			<Value ID="Num6">Key - 6</Value>
+			<Value ID="P">Key - P</Value>
+			<Value ID="O">Key - O</Value>
+			<Value ID="I">Key - I</Value>
+			<Value ID="U">Key - U</Value>
+			<Value ID="Y">Key - Y</Value>
+			<Value ID="Enter">Key - ENTER</Value>
+			<Value ID="L">Key - L</Value>
+			<Value ID="K">Key - K</Value>
+			<Value ID="J">Key - J</Value>
+			<Value ID="H">Key - H</Value>
+			<Value ID="Space">Key - SPACE (BREAK)</Value>
+			<Value ID="SymbolShift">Key - SYMBOL SHIFT</Value>
+			<Value ID="M">Key - M</Value>
+			<Value ID="N">Key - N</Value>
+			<Value ID="B">Key - B</Value>
+			<Value ID="Delete">Key - Delete (CAPS+0)</Value>
+			<Value ID="CursorLeft">Key - Cursor left (CAPS+5)</Value>
+			<Value ID="CursorDown">Key - Cursor down (CAPS+6)</Value>
+			<Value ID="CursorUp">Key - Cursor up (CAPS+7)</Value>
+			<Value ID="CursorRight">Key - Cursor right (CAPS+8)</Value>
+			<Value ID="Edit">Key - Edit (CAPS+1)</Value>
+			<Value ID="Break">Key - Break (CAPS+SPACE)</Value>
 		</Enum>
 		<Enum ID="NesJissenMahjongButtons">
 			<Value ID="A">A</Value>
@@ -2849,6 +2900,7 @@ E
 			<Value ID="Ymf288AdpcmRom">YFM288 ADPCM ROM (EPSM)</Value>
 			<Value ID="SmsBootRom">Master System - Boot ROM</Value>
 			<Value ID="GgBootRom">Game Gear - Boot ROM</Value>
+			<Value ID="Zx48K">ZX Spectrum 48K - ROM</Value>
 		</Enum>
 
 		<Enum ID="CpuType">
@@ -2865,6 +2917,7 @@ E
 			<Value ID="Sms">SMS</Value>
 			<Value ID="Gba">GBA</Value>
 			<Value ID="Ws">WS</Value>
+			<Value ID="Zx">ZX Spectrum (Z80)</Value>
 		</Enum>
 		
 		<Enum ID="MemoryType">
@@ -2967,6 +3020,11 @@ E
 			<Value ID="WsInternalEeprom">IEEPROM (Internal)</Value>
 			<Value ID="WsPort">I/O Port</Value>
 
+			<Value ID="ZxMemory">CPU Memory</Value>
+			<Value ID="ZxRom">ROM</Value>
+			<Value ID="ZxRam">RAM</Value>
+			<Value ID="ZxPort">I/O Port</Value>
+
 			<Value ID="None">None</Value>
 		</Enum>
 		<Enum ID="GameboyModel">
@@ -2977,6 +3035,9 @@ E
 			<Value ID="Gameboy">Game Boy</Value>
 			<Value ID="GameboyColor">Game Boy Color</Value>
 			<Value ID="SuperGameboy">Super Game Boy</Value>
+		</Enum>
+		<Enum ID="ZxModel">
+			<Value ID="Spectrum48K">ZX Spectrum 48K</Value>
 		</Enum>
 		<Enum ID="WsModel">
 			<Value ID="Auto">Auto</Value>

@@ -34,7 +34,8 @@ enum class FirmwareType
 	SwanCrystal,
 	Ymf288AdpcmRom,
 	SmsBootRom,
-	GgBootRom
+	GgBootRom,
+	Zx48K
 };
 
 struct MissingFirmwareMessage
@@ -433,6 +434,25 @@ public:
 		}
 
 		MessageManager::DisplayMessage("Error", "Could not find boot rom for the WonderSwan, skipping boot screen.");
+		return false;
+	}
+
+	static bool LoadZxRom(Emulator* emu, vector<uint8_t>& rom)
+	{
+		string filename = "48.rom";
+		uint32_t size = 0x4000;
+		if(AttemptLoadFirmware(rom, filename, size)) {
+			return true;
+		}
+
+		MissingFirmwareMessage msg(filename.c_str(), FirmwareType::Zx48K, size);
+		emu->GetNotificationManager()->SendNotification(ConsoleNotificationType::MissingFirmware, &msg);
+
+		if(AttemptLoadFirmware(rom, filename, size)) {
+			return true;
+		}
+
+		MessageManager::DisplayMessage("Error", "Could not find the ZX Spectrum 48K ROM (48.rom).");
 		return false;
 	}
 

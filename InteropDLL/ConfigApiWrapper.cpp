@@ -75,6 +75,11 @@ extern "C"
 		_emu->GetSettings()->SetWsConfig(config);
 	}
 
+	DllExport void __stdcall SetZxConfig(ZxConfig config)
+	{
+		_emu->GetSettings()->SetZxConfig(config);
+	}
+
 	DllExport void __stdcall SetGameConfig(GameConfig config)
 	{
 		_emu->GetSettings()->SetGameConfig(config);

@@ -180,7 +180,10 @@ namespace Mesen.Interop
 
 		Gba,
 
-		Ws
+		Ws,
+
+		ZxSnapshot,
+		ZxTape
 	}
 
 	public enum ConsoleType
@@ -192,6 +195,7 @@ namespace Mesen.Interop
 		Sms = 4,
 		Gba = 5,
 		Ws = 6,
+		Zx = 7,
 	}
 
 	public enum ByteCodeFormat
@@ -281,7 +285,8 @@ namespace Mesen.Interop
 		SwanCrystal,
 		Ymf288AdpcmRom,
 		SmsBootRom,
-		GgBootRom
+		GgBootRom,
+		Zx48K
 	}
 
 	public struct MissingFirmwareMessage

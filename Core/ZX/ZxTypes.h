@@ -2,11 +2,7 @@
 #include "pch.h"
 #include "Shared/BaseState.h"
 #include "Shared/MemoryType.h"
-
-enum class ZxModel
-{
-	Spectrum48K,
-};
+#include "Shared/SettingTypes.h"
 
 //Frame/ULA timing for a model, in T-states (CPU clock cycles)
 struct ZxTiming
@@ -93,6 +89,11 @@ struct ZxCpuState : public BaseState
 
 	//Set when the last instruction was LD A,I or LD A,R (NMOS Z80s copy IFF2 to P/V before an accepted IRQ clears it)
 	bool Iff2Read;
+};
+
+struct ZxState : public BaseState
+{
+	ZxCpuState Cpu;
 };
 
 namespace ZxCpuFlags

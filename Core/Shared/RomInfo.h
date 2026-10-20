@@ -32,6 +32,9 @@ enum class RomFormat
 	Gba,
 
 	Ws,
+
+	ZxSnapshot,
+	ZxTape,
 };
 
 struct DipSwitchInfo

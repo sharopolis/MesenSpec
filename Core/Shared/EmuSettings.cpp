@@ -157,6 +157,11 @@ void EmuSettings::Serialize(Serializer& s)
 			SV(_ws.UseBootRom);
 			break;
 
+		case ConsoleType::Zx:
+			SV(_zx.Model);
+			SV(_zx.Keyboard.Type);
+			break;
+
 		default:
 			throw std::runtime_error("unsupported console type");
 	}
@@ -342,6 +347,16 @@ WsConfig& EmuSettings::GetWsConfig()
 	return _ws;
 }
 
+void EmuSettings::SetZxConfig(ZxConfig& config)
+{
+	_zx = config;
+}
+
+ZxConfig& EmuSettings::GetZxConfig()
+{
+	return _zx;
+}
+
 void EmuSettings::SetGameConfig(GameConfig& config)
 {
 	_game = config;
@@ -504,6 +519,7 @@ OverscanDimensions EmuSettings::GetOverscan()
 		case ConsoleType::Gameboy:
 		case ConsoleType::Gba:
 		case ConsoleType::Ws:
+		case ConsoleType::Zx:
 			break;
 	}
 
@@ -538,8 +554,8 @@ double EmuSettings::GetAspectRatio(ConsoleRegion region, FrameInfo baseFrameSize
 
 		//For auto, ntsc and pal, these are PAR ratios, so multiply them with the base screen's aspect ratio to get the expected screen aspect ratio
 		case VideoAspectRatio::Auto:
-			if(_emu->GetConsoleType() == ConsoleType::Gameboy || _emu->GetConsoleType() == ConsoleType::Gba || _emu->GetConsoleType() == ConsoleType::Ws) {
-				//GB/GBA/WS shouldn't use NTSC/PAL aspect ratio when in auto mode
+			if(_emu->GetConsoleType() == ConsoleType::Gameboy || _emu->GetConsoleType() == ConsoleType::Gba || _emu->GetConsoleType() == ConsoleType::Ws || _emu->GetConsoleType() == ConsoleType::Zx) {
+				//GB/GBA/WS/ZX shouldn't use NTSC/PAL aspect ratio when in auto mode (the ZX picture includes the border, which already gives a ~4:3 picture)
 				return screenAspectRatio;
 			} else if(_emu->GetRomInfo().Format == RomFormat::GameGear) {
 				//GG has a 6:5 PAR

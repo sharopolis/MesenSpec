@@ -416,6 +416,9 @@ namespace Mesen.Config
 		WsController,
 		WsControllerVertical,
 		Pcv2Controller,
+
+		//ZX Spectrum
+		ZxKeyboard,
 	}
 
 	public static class ControllerTypeExtensions

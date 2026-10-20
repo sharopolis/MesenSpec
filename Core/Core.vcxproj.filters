@@ -2601,6 +2601,48 @@
     <ClInclude Include="SMS\SmsVdp.h">
       <Filter>SMS</Filter>
     </ClInclude>
+    <ClInclude Include="ZX\IZxBus.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Input\ZxKeyboardDevice.h">
+      <Filter>ZX\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxBeeper.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxConsole.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxControlManager.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxCpu.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxDefaultVideoFilter.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxKeyboard.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxMachine.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxMemoryManager.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxSnapshot.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxTape.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxTypes.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxUla.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
     <ClInclude Include="SMS\SmsTypes.h">
       <Filter>SMS</Filter>
     </ClInclude>
@@ -3140,6 +3182,30 @@
     <ClCompile Include="SMS\SmsConsole.cpp">
       <Filter>SMS</Filter>
     </ClCompile>
+    <ClCompile Include="ZX\ZxConsole.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxControlManager.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxCpu.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxMachine.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxMemoryManager.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxSnapshot.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxTape.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxUla.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
     <ClCompile Include="SMS\SmsCpu.cpp">
       <Filter>SMS</Filter>
     </ClCompile>
@@ -3483,6 +3549,12 @@
     </Filter>
     <Filter Include="NES\Mappers\NSF">
       <UniqueIdentifier>{a27bca76-05ce-4940-a583-d50aef2668f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZX">
+      <UniqueIdentifier>{7eee7a4d-d9c9-4549-b32e-1b8b9fddc391}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZX\Input">
+      <UniqueIdentifier>{4edee02a-055d-4f60-b179-4d22db0579d7}</UniqueIdentifier>
     </Filter>
     <Filter Include="SMS">
       <UniqueIdentifier>{418fea7a-2766-464e-a553-e0647531fca2}</UniqueIdentifier>

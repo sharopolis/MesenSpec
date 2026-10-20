@@ -1,37 +1,33 @@
 #pragma once
 #include "pch.h"
+#include "Utilities/Audio/blip_buf.h"
 
-//Beeper output (EAR/MIC bits of port 0xFE). Level changes are recorded with their T-state and box-filtered
-//down to the output sample rate at the end of each frame.
+//Beeper output (EAR/MIC bits of port 0xFE). Level changes are fed to a band-limited synthesizer (blip_buf) at the
+//T-state they happen, and turned into 44.1kHz samples at the end of each frame.
 class ZxBeeper
 {
 private:
-	static constexpr uint32_t SampleRate = 44100;
+	static constexpr uint32_t MaxSamples = 4000;
 
-	uint32_t _cpuClockRate = 3500000;
+	blip_t* _blip = nullptr;
 	uint64_t _frameStartCycle = 0;
-
-	//Current output level, and the level at the start of the current frame
 	int16_t _level = 0;
-	int16_t _startLevel = 0;
-
-	//Frame-relative T-state of each level change (can be past the end of the frame, for an instruction that
-	//finishes after the frame's last T-state)
-	vector<std::pair<uint32_t, int16_t>> _changes;
-
-	//Position of the next sample within the frame, in units of T-states * SampleRate
-	uint64_t _samplePos = 0;
 	vector<int16_t> _samples;
 
 public:
+	static constexpr uint32_t SampleRate = 44100;
+
+	ZxBeeper() { _blip = blip_new(MaxSamples); }
+	~ZxBeeper() { blip_delete(_blip); }
+	ZxBeeper(const ZxBeeper&) = delete;
+	ZxBeeper& operator=(const ZxBeeper&) = delete;
+
 	void Init(uint32_t cpuClockRate)
 	{
-		_cpuClockRate = cpuClockRate;
+		blip_set_rates(_blip, cpuClockRate, SampleRate);
+		blip_clear(_blip);
 		_frameStartCycle = 0;
 		_level = 0;
-		_startLevel = 0;
-		_samplePos = 0;
-		_changes.clear();
 		_samples.clear();
 	}
 
@@ -40,7 +36,8 @@ public:
 		//EAR (bit 4) drives the speaker, MIC (bit 3) leaks into it at a much lower level
 		int16_t level = ((value & 0x10) ? 12000 : 0) + ((value & 0x08) ? 1500 : 0);
 		if(level != _level) {
-			_changes.push_back({ (uint32_t)(cycle - _frameStartCycle), level });
+			//The time can be a few T-states past the end of the frame (for the instruction that ends it) - blip_buf allows that
+			blip_add_delta(_blip, (uint32_t)(cycle - _frameStartCycle), level - _level);
 			_level = level;
 		}
 	}
@@ -48,42 +45,9 @@ public:
 	//Generates this frame's samples (mono, 44.1kHz)
 	void EndFrame(uint32_t frameLength)
 	{
-		_samples.clear();
-
-		int16_t level = _startLevel;
-		size_t changeIndex = 0;
-
-		//Each output sample covers _cpuClockRate / SampleRate T-states (~79.4)
-		uint64_t end = (uint64_t)frameLength * SampleRate;
-		while(_samplePos + _cpuClockRate <= end) {
-			uint32_t from = (uint32_t)(_samplePos / SampleRate);
-			uint32_t to = (uint32_t)((_samplePos + _cpuClockRate) / SampleRate);
-			int64_t sum = 0;
-			uint32_t t = from;
-			while(changeIndex < _changes.size() && _changes[changeIndex].first < to) {
-				uint32_t changeAt = std::max(_changes[changeIndex].first, from);
-				sum += (int64_t)level * (changeAt - t);
-				t = changeAt;
-				level = _changes[changeIndex].second;
-				changeIndex++;
-			}
-			sum += (int64_t)level * (to - t);
-			_samples.push_back((int16_t)(sum / std::max<uint32_t>(1, to - from)));
-			_samplePos += _cpuClockRate;
-		}
-		_samplePos -= end;
-
-		//Apply the changes in the frame's last partial sample, keep the ones that belong to the next frame
-		vector<std::pair<uint32_t, int16_t>> nextFrame;
-		for(; changeIndex < _changes.size(); changeIndex++) {
-			if(_changes[changeIndex].first < frameLength) {
-				level = _changes[changeIndex].second;
-			} else {
-				nextFrame.push_back({ _changes[changeIndex].first - frameLength, _changes[changeIndex].second });
-			}
-		}
-		_startLevel = level;
-		_changes = std::move(nextFrame);
+		blip_end_frame(_blip, frameLength);
+		_samples.resize(blip_samples_avail(_blip));
+		blip_read_samples(_blip, _samples.data(), (int)_samples.size(), 0);
 		_frameStartCycle += frameLength;
 	}
 

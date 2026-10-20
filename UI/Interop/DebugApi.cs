@@ -600,6 +600,7 @@ namespace Mesen.Interop
 		SmsMemory,
 		GbaMemory,
 		WsMemory,
+		ZxMemory,
 
 		SnesPrgRom,
 		SnesWorkRam,
@@ -685,6 +686,9 @@ namespace Mesen.Interop
 		WsBootRom,
 		WsInternalEeprom,
 		WsPort,
+		ZxRom,
+		ZxRam,
+		ZxPort,
 
 		None,
 	}
@@ -1556,7 +1560,8 @@ namespace Mesen.Interop
 		Pce,
 		Sms,
 		Gba,
-		Ws
+		Ws,
+		Zx
 	}
 
 	public enum StepType

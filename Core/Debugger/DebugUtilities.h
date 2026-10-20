@@ -23,6 +23,7 @@ public:
 			case CpuType::Sms: return MemoryType::SmsMemory;
 			case CpuType::Gba: return MemoryType::GbaMemory;
 			case CpuType::Ws: return MemoryType::WsMemory;
+			case CpuType::Zx: return MemoryType::ZxMemory;
 		}
 
 		throw std::runtime_error("Invalid CPU type");
@@ -44,6 +45,7 @@ public:
 			case CpuType::Sms: return 4;
 			case CpuType::Gba: return 8;
 			case CpuType::Ws: return 5;
+			case CpuType::Zx: return 4;
 		}
 
 		throw std::runtime_error("Invalid CPU type");
@@ -181,6 +183,12 @@ public:
 			case MemoryType::WsPort:
 				return CpuType::Ws;
 
+			case MemoryType::ZxMemory:
+			case MemoryType::ZxRom:
+			case MemoryType::ZxRam:
+			case MemoryType::ZxPort:
+				return CpuType::Zx;
+
 			default:
 				throw std::runtime_error("Invalid CPU type");
 		}
@@ -193,7 +201,7 @@ public:
 
 	static constexpr MemoryType GetLastCpuMemoryType()
 	{
-		return MemoryType::WsMemory;
+		return MemoryType::ZxMemory;
 	}
 
 	static constexpr bool IsPpuMemory(MemoryType memType)
@@ -271,6 +279,7 @@ public:
 			case MemoryType::SmsBootRom:
 			case MemoryType::GbaBootRom:
 			case MemoryType::WsBootRom:
+			case MemoryType::ZxRom:
 				return true;
 
 			default:
@@ -303,7 +312,7 @@ public:
 
 	static constexpr CpuType GetLastCpuType()
 	{
-		return CpuType::Ws;
+		return CpuType::Zx;
 	}
 
 	static string AddressToHex(CpuType cpuType, int32_t address)

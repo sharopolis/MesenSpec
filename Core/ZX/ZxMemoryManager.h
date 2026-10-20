@@ -34,6 +34,7 @@ public:
 
 	bool LoadRom(const vector<uint8_t>& rom);
 
+	uint8_t* GetRom() { return _rom; }
 	uint8_t* GetRam() { return _ram; }
 	uint8_t* GetVideoRam() { return _ram; }
 

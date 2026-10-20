@@ -125,6 +125,12 @@ namespace Mesen.Interop
 				case MemoryType.WsPort:
 					return CpuType.Ws;
 
+				case MemoryType.ZxMemory:
+				case MemoryType.ZxRom:
+				case MemoryType.ZxRam:
+				case MemoryType.ZxPort:
+					return CpuType.Zx;
+
 				default:
 					throw new NotImplementedException("Unsupported cpu type");
 			}
@@ -237,6 +243,7 @@ namespace Mesen.Interop
 				case MemoryType.SmsMemory:
 				case MemoryType.GbaMemory:
 				case MemoryType.WsMemory:
+				case MemoryType.ZxMemory:
 					return true;
 			}
 			return false;
@@ -260,6 +267,7 @@ namespace Mesen.Interop
 				case MemoryType.SpcRom:
 				case MemoryType.SmsPrgRom:
 				case MemoryType.SmsBootRom:
+				case MemoryType.ZxRom:
 				case MemoryType.GbaPrgRom:
 				case MemoryType.GbaBootRom:
 				case MemoryType.WsPrgRom:
@@ -340,6 +348,13 @@ namespace Mesen.Interop
 				case MemoryType.WsBootRom:
 				case MemoryType.WsPort:
 					return true;
+
+				//ZX
+				case MemoryType.ZxMemory:
+				case MemoryType.ZxRom:
+				case MemoryType.ZxRam:
+				case MemoryType.ZxPort:
+					return true;
 			}
 
 			return false;
@@ -361,6 +376,7 @@ namespace Mesen.Interop
 				case MemoryType.SmsMemory:
 				case MemoryType.GbaMemory:
 				case MemoryType.WsMemory:
+				case MemoryType.ZxMemory:
 					return true;
 			}
 
@@ -394,6 +410,9 @@ namespace Mesen.Interop
 
 				case MemoryType.WsMemory:
 				case MemoryType.WsPrgRom:
+
+				case MemoryType.ZxMemory:
+				case MemoryType.ZxRom:
 					return true;
 
 				case MemoryType.NesPpuMemory:
@@ -421,6 +440,7 @@ namespace Mesen.Interop
 				case MemoryType.PceAdpcmRam:
 				case MemoryType.SmsPort:
 				case MemoryType.WsPort:
+				case MemoryType.ZxPort:
 					return false;
 
 				case MemoryType.GbaVideoRam:
@@ -549,6 +569,11 @@ namespace Mesen.Interop
 				MemoryType.WsInternalEeprom => "IEEPROM",
 				MemoryType.WsPort => "PORT",
 
+				MemoryType.ZxMemory => "CPU",
+				MemoryType.ZxRom => "ROM",
+				MemoryType.ZxRam => "RAM",
+				MemoryType.ZxPort => "PORT",
+
 				MemoryType.None => "n/a",
 
 				_ => throw new Exception("invalid type"),
@@ -562,6 +587,7 @@ namespace Mesen.Interop
 				case MemoryType.WsPort:
 				case MemoryType.WsCartEeprom:
 				case MemoryType.WsInternalEeprom:
+				case MemoryType.ZxPort:
 					return true;
 			}
 
