@@ -147,7 +147,16 @@ int main(int argc, char** argv)
 		}
 		zx->RunFrame();
 		const vector<int16_t>& samples = zx->GetBeeper().GetSamples();
-		audio.insert(audio.end(), samples.begin(), samples.end());
+		if(zx->HasAy()) {
+			//Beeper + AY - both produce the same number of samples per frame
+			const vector<int16_t>& aySamples = zx->GetAy().GetSamples();
+			for(size_t i = 0; i < samples.size(); i++) {
+				int32_t mixed = samples[i] + (i < aySamples.size() ? aySamples[i] : 0);
+				audio.push_back((int16_t)std::clamp<int32_t>(mixed, INT16_MIN, INT16_MAX));
+			}
+		} else {
+			audio.insert(audio.end(), samples.begin(), samples.end());
+		}
 	}
 
 	ZxCpuState& s = zx->GetCpu().GetState();

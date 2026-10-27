@@ -141,14 +141,19 @@ void ZxConsole::RunFrame()
 	_controlManager->UpdateControlDevices();
 	_controlManager->UpdateInputState();
 
-	//The mixer expects interleaved stereo samples
+	//Mix the beeper and the AY (same number of samples per frame) - the mixer expects interleaved stereo samples
+	ZxConfig& cfg = _emu->GetSettings()->GetZxConfig();
 	const vector<int16_t>& samples = _machine->GetBeeper().GetSamples();
-	uint32_t volume = _emu->GetSettings()->GetZxConfig().BeeperVolume;
+	const vector<int16_t>* aySamples = _machine->HasAy() ? &_machine->GetAy().GetSamples() : nullptr;
 	_stereoSamples.resize(samples.size() * 2);
 	for(size_t i = 0; i < samples.size(); i++) {
-		int16_t sample = (int16_t)(samples[i] * (int32_t)volume / 100);
-		_stereoSamples[i * 2] = sample;
-		_stereoSamples[i * 2 + 1] = sample;
+		int32_t sample = samples[i] * (int32_t)cfg.BeeperVolume / 100;
+		if(aySamples && i < aySamples->size()) {
+			sample += (*aySamples)[i] * (int32_t)cfg.AyVolume / 100;
+		}
+		int16_t clamped = (int16_t)std::clamp<int32_t>(sample, INT16_MIN, INT16_MAX);
+		_stereoSamples[i * 2] = clamped;
+		_stereoSamples[i * 2 + 1] = clamped;
 	}
 	_emu->GetSoundMixer()->PlayAudioBuffer(_stereoSamples.data(), (uint32_t)samples.size(), ZxBeeper::SampleRate);
 }
@@ -319,6 +324,11 @@ ZxState ZxConsole::GetState()
 	state.Io.PortFe = _machine->GetMemoryManager().GetPortFe();
 	state.Io.Port7ffd = _machine->GetMemoryManager().GetPort7ffd();
 	state.Io.HasPaging = _machine->GetMemoryManager().HasPaging();
+	if(_machine->HasAy()) {
+		state.Ay = _machine->GetAy().GetState();
+	} else {
+		state.Ay = {};
+	}
 	state.Io.EarInput = _machine->GetMemoryManager().GetEarInput();
 	for(int i = 0; i < 8; i++) {
 		state.Io.KeyboardRows[i] = _machine->GetKeyboard().GetRow(i);

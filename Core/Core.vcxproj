@@ -134,6 +134,8 @@
     <ClInclude Include="ZX\Debugger\ZxTraceLogger.h" />
     <ClInclude Include="ZX\IZxBus.h" />
     <ClInclude Include="ZX\Input\ZxKeyboardDevice.h" />
+    <ClInclude Include="ZX\ZxAudioChannel.h" />
+    <ClInclude Include="ZX\ZxAy.h" />
     <ClInclude Include="ZX\ZxBeeper.h" />
     <ClInclude Include="ZX\ZxConsole.h" />
     <ClInclude Include="ZX\ZxControlManager.h" />
@@ -997,6 +999,7 @@
     <ClCompile Include="ZX\ZxMachine.cpp" />
     <ClCompile Include="ZX\ZxMemoryManager.cpp" />
     <ClCompile Include="ZX\ZxSnapshot.cpp" />
+    <ClCompile Include="ZX\ZxAy.cpp" />
     <ClCompile Include="ZX\ZxTape.cpp" />
     <ClCompile Include="ZX\ZxUla.cpp" />
     <ClCompile Include="SMS\SmsFmAudio.cpp" />

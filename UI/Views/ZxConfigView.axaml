@@ -43,6 +43,14 @@
 							Orientation="Vertical"
 							Margin="5 0"
 						/>
+						<c:MesenSlider
+							Text="{l:Translate lblAy}"
+							Value="{Binding Config.AyVolume}"
+							Minimum="0"
+							Maximum="100"
+							Orientation="Vertical"
+							Margin="5 0"
+						/>
 					</StackPanel>
 				</c:GroupBox>
 			</c:OptionSection>

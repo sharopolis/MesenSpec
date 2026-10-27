@@ -18,6 +18,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 	[ObservableProperty] public partial ZxModel Model { get; set; } = ZxModel.Spectrum48K;
 
 	[ObservableProperty][MinMax(0, 100)] public partial UInt32 BeeperVolume { get; set; } = 100;
+	[ObservableProperty][MinMax(0, 100)] public partial UInt32 AyVolume { get; set; } = 100;
 
 	public void ApplyConfig()
 	{
@@ -27,6 +28,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 			Keyboard = Keyboard.ToInterop(),
 			Model = Model,
 			BeeperVolume = BeeperVolume,
+			AyVolume = AyVolume,
 		});
 	}
 
@@ -46,6 +48,7 @@ public struct InteropZxConfig
 	public ZxModel Model;
 
 	public UInt32 BeeperVolume;
+	public UInt32 AyVolume;
 }
 
 public enum ZxModel : byte

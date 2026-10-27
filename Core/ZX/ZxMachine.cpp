@@ -8,9 +8,10 @@ ZxMachine::ZxMachine(ZxModel model)
 {
 	_model = model;
 	const ZxTiming& timing = ZxTiming::Get(_model);
-	_memoryManager.Init(_model, &_ula, &_keyboard, &_beeper);
+	_memoryManager.Init(_model, &_ula, &_keyboard, &_beeper, HasAy() ? &_ay : nullptr);
 	_ula.Init(_model, _memoryManager.GetVideoRam());
 	_beeper.Init(timing.CpuClockRate);
+	_ay.Init(timing.CpuClockRate);
 	_cpu.Init(&_memoryManager);
 }
 
@@ -39,6 +40,7 @@ void ZxMachine::Reset()
 	_memoryManager.Reset();
 	_ula.Reset();
 	_beeper.Init(ZxTiming::Get(_model).CpuClockRate);
+	_ay.Init(ZxTiming::Get(_model).CpuClockRate);
 	_keyboard.ReleaseAll();
 	_cpu.Reset();
 }
@@ -59,6 +61,9 @@ void ZxMachine::RunFrame()
 	}
 	_ula.EndFrame();
 	_beeper.EndFrame(_ula.GetTiming().FrameLength);
+	if(HasAy()) {
+		_ay.EndFrame(frameEnd, _ula.GetTiming().FrameLength);
+	}
 }
 
 uint32_t ZxMachine::GetPaletteColor(uint16_t index)
@@ -76,4 +81,7 @@ void ZxMachine::Serialize(Serializer& s)
 	SV(_cpu);
 	SV(_ula);
 	SV(_memoryManager);
+	if(HasAy()) {
+		SV(_ay);
+	}
 }

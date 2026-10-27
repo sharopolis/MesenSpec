@@ -7,12 +7,13 @@
 class ZxUla;
 class ZxKeyboard;
 class ZxBeeper;
+class ZxAy;
 
 //Memory map and I/O. The 64K address space is made of four 16K slots:
 //- 48K: ROM, then 48K of RAM (0x4000-0x7FFF is shared with the ULA, and contended). The RAM array is linear.
 //- 128K: ROM 0 (128K editor) or ROM 1 (48K BASIC), RAM bank 5, bank 2 and any bank at 0xC000, selected through port
 //  0x7FFD. The RAM array holds the 8 banks in order. Odd banks are contended, the ULA displays bank 5 or 7.
-//The ULA answers every even port.
+//The ULA answers every even port. The 128K's AY is at 0xFFFD (register select/read) and 0xBFFD (write).
 class ZxMemoryManager final : public IZxBus, public ISerializable
 {
 private:
@@ -21,6 +22,7 @@ private:
 	ZxUla* _ula = nullptr;
 	ZxKeyboard* _keyboard = nullptr;
 	ZxBeeper* _beeper = nullptr;
+	ZxAy* _ay = nullptr;
 
 	ZxModel _model = ZxModel::Spectrum48K;
 	uint32_t _romSize = BankSize;
@@ -51,7 +53,8 @@ private:
 	void UpdateMapping();
 
 public:
-	void Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper);
+	//ay: the 128K's sound chip (nullptr on the 48K)
+	void Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay);
 	void Reset();
 
 	//16K for the 48K, 32K (ROM 0 then ROM 1) for the 128K

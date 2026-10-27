@@ -86,9 +86,19 @@ public struct ZxIoState : BaseState
 	[MarshalAs(UnmanagedType.I1)] public bool HasPaging;
 }
 
+//Same layout as ZxAyState in Core/ZX/ZxTypes.h
+public struct ZxAyState : BaseState
+{
+	[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)] public byte[] Registers;
+	public byte SelectedRegister;
+	public byte EnvelopeVolume;
+	[MarshalAs(UnmanagedType.I1)] public bool Present;
+}
+
 public struct ZxState : BaseState
 {
 	public ZxCpuState Cpu;
 	public ZxUlaState Ula;
 	public ZxIoState Io;
+	public ZxAyState Ay;
 }

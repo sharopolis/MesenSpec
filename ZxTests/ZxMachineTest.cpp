@@ -349,6 +349,105 @@ static void Test128Ula(const vector<uint8_t>& rom)
 	CHECK(fb[paper] == 2 && fb[paper + 1] == 0, "shadow screen drawn: %d %d", fb[paper], fb[paper + 1]);
 }
 
+static void TestAy(const vector<uint8_t>& rom128, const vector<uint8_t>& rom48)
+{
+	unique_ptr<ZxMachine> zx = Create128(rom128);
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	uint64_t f = zx->GetUla().GetFrameStartCycle();
+	auto setReg = [&](uint8_t reg, uint8_t value) {
+		mm.WritePort(0xFFFD, reg, f);
+		mm.WritePort(0xBFFD, value, f);
+	};
+	auto getReg = [&](uint8_t reg) {
+		mm.WritePort(0xFFFD, reg, f);
+		return mm.ReadPort(0xFFFD, f);
+	};
+
+	//Registers read back with their unused bits cleared
+	setReg(0, 0xFF);
+	setReg(1, 0xFF);
+	setReg(6, 0xFF);
+	setReg(8, 0xFF);
+	setReg(13, 0xFF);
+	CHECK(getReg(0) == 0xFF && getReg(1) == 0x0F && getReg(6) == 0x1F && getReg(8) == 0x1F && getReg(13) == 0x0F,
+		"register masks: %02X %02X %02X %02X %02X", getReg(0), getReg(1), getReg(6), getReg(8), getReg(13));
+
+	//Port decoding: writes to 0xBFFD with A14 set select instead, and 0xFFFD is decoded on A15/A14/A1 only
+	setReg(2, 0x12);
+	mm.WritePort(0xC0FD, 2, f);
+	CHECK(mm.ReadPort(0xC0FD, f) == 0x12, "0xC0FD reads the AY");
+	mm.WritePort(0xFFFF, 0x34, f);
+	CHECK(getReg(2) == 0x12, "0xFFFF (A1 set) is not the AY");
+
+	//Register 14 (I/O port A) reads 0xFF while in input mode
+	setReg(7, 0x00);
+	setReg(14, 0x55);
+	CHECK(getReg(14) == 0xFF, "port A in input mode: %02X", getReg(14));
+	setReg(7, 0x40);
+	CHECK(getReg(14) == 0x55, "port A in output mode: %02X", getReg(14));
+
+	//Tone frequency: AY clock / (16 * period) - measured over 1 second of channel A alone
+	ZxAy& ay = zx->GetAy();
+	ay.Reset();
+	ay.Init(zx->GetUla().GetTiming().CpuClockRate);
+	setReg(0, 100);
+	setReg(1, 0);
+	setReg(7, 0x3E);
+	setReg(8, 0x0F);
+	uint32_t frameLength = zx->GetUla().GetTiming().FrameLength;
+	int crossings = 0;
+	int16_t prev = 0;
+	uint64_t frameEnd = 0;
+	for(int i = 0; i < 55; i++) {
+		frameEnd += frameLength;
+		ay.EndFrame(frameEnd, frameLength);
+		if(i < 5) {
+			//Let the output filter settle
+			continue;
+		}
+		for(int16_t sample : ay.GetSamples()) {
+			//The output is high-pass filtered (centred on 0)
+			if(prev < 0 && sample >= 0) {
+				crossings++;
+			}
+			prev = sample;
+		}
+	}
+	double expected = (zx->GetUla().GetTiming().CpuClockRate / 2.0) / (16 * 100) * (50.0 * frameLength / zx->GetUla().GetTiming().CpuClockRate);
+	CHECK(std::abs(crossings - expected) <= 2, "tone period 100: %d cycles in 50 frames, expected %.1f", crossings, expected);
+
+	//Envelope shapes: volume after a few ramps (period 1 = 32 T-states per step, 512 per ramp)
+	struct { uint8_t Shape; uint8_t AfterRamp; uint8_t MidSecondRamp; } shapes[] = {
+		{ 0x00, 0, 0 }, { 0x04, 0, 0 },   //\___ and /___: back to 0
+		{ 0x08, 15, 7 }, { 0x0C, 0, 8 },  //\\\\ and ////: the ramp starts over
+		{ 0x09, 0, 0 }, { 0x0B, 15, 15 }, //\___ and \¯¯¯
+		{ 0x0D, 15, 15 }, { 0x0F, 0, 0 }, ///¯¯¯ and /___
+		{ 0x0A, 0, 8 }, { 0x0E, 15, 7 },  //\/\/ and /\/\: the direction flips
+	};
+	for(auto& e : shapes) {
+		uint64_t start = frameEnd;
+		ay.Update(start);
+		mm.WritePort(0xFFFD, 11, start);
+		mm.WritePort(0xBFFD, 1, start);
+		mm.WritePort(0xFFFD, 12, start);
+		mm.WritePort(0xBFFD, 0, start);
+		mm.WritePort(0xFFFD, 13, start);
+		mm.WritePort(0xBFFD, e.Shape, start);
+		//16 steps of 2 ticks of 16 T-states per ramp
+		ay.Update(start + 512 + 16);
+		uint8_t afterRamp = ay.GetState().EnvelopeVolume;
+		ay.Update(start + 512 + 256 + 16);
+		uint8_t midSecondRamp = ay.GetState().EnvelopeVolume;
+		CHECK(afterRamp == e.AfterRamp && midSecondRamp == e.MidSecondRamp, "envelope shape %X: %d then %d, expected %d then %d",
+			e.Shape, afterRamp, midSecondRamp, e.AfterRamp, e.MidSecondRamp);
+		frameEnd = start + 2000;
+	}
+
+	//No AY on the 48K: its ports are unattached
+	unique_ptr<ZxMachine> zx48 = CreateMachine(rom48);
+	CHECK(!zx48->HasAy() && zx48->GetMemoryManager().ReadPort(0xFFFD, 0) == 0xFF, "48K has no AY");
+}
+
 int main(int argc, char** argv)
 {
 	if(argc < 2) {
@@ -383,6 +482,7 @@ int main(int argc, char** argv)
 		Test128Boot(rom128);
 		Test128Paging(rom128);
 		Test128Ula(rom128);
+		TestAy(rom128, rom);
 	} else if(argc > 2) {
 		fprintf(stderr, "The 128K ROM must be 32K in total\n");
 		return 2;

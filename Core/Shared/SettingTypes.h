@@ -871,6 +871,7 @@ struct ZxConfig
 	ZxModel Model = ZxModel::Spectrum48K;
 
 	uint32_t BeeperVolume = 100;
+	uint32_t AyVolume = 100;
 };
 
 struct AudioPlayerConfig

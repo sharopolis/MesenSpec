@@ -1,5 +1,6 @@
 using Mesen.Debugger.ViewModels;
 using Mesen.Interop;
+using System;
 using System.Collections.Generic;
 using static Mesen.Debugger.ViewModels.RegEntry;
 
@@ -23,10 +24,68 @@ public class ZxRegisterViewer
 
 	public static List<RegisterViewerTab> GetTabs(ref ZxState zxState)
 	{
-		return new List<RegisterViewerTab>() {
+		List<RegisterViewerTab> tabs = new List<RegisterViewerTab>() {
 			GetUlaTab(ref zxState),
 			GetKeyboardTab(ref zxState),
 		};
+		if(zxState.Ay.Present) {
+			tabs.Add(GetAyTab(ref zxState));
+		}
+		return tabs;
+	}
+
+	private static readonly string[] _envelopeShapes = {
+		"\\___", "\\___", "\\___", "\\___", "/___", "/___", "/___", "/___",
+		"\\\\\\\\", "\\___", "\\/\\/", "\\¯¯¯", "////", "/¯¯¯", "/\\/\\", "/___"
+	};
+
+	private static RegisterViewerTab GetAyTab(ref ZxState zx)
+	{
+		ZxAyState ay = zx.Ay;
+		byte[] r = ay.Registers ?? new byte[16];
+		//AY clock = CPU clock / 2 (1.7734 MHz on the 128K)
+		double ayClock = 3546900 / 2.0;
+
+		List<RegEntry> entries = new List<RegEntry>() {
+			new RegEntry("$FFFD", "Selected register", ay.SelectedRegister, Format.X8),
+		};
+
+		string[] channels = { "A", "B", "C" };
+		for(int i = 0; i < 3; i++) {
+			int period = r[i * 2] | ((r[i * 2 + 1] & 0x0F) << 8);
+			double freq = ayClock / (16.0 * Math.Max(period, 1));
+			int amplitude = r[8 + i];
+			entries.Add(new RegEntry("", "Channel " + channels[i]));
+			entries.Add(new RegEntry($"R{i * 2}-{i * 2 + 1}", "Tone period", period, Format.X16));
+			entries.Add(new RegEntry("", "Tone frequency", $"{freq:0.0} Hz", null));
+			entries.Add(new RegEntry("R7." + i, "Tone enabled", (r[7] & (1 << i)) == 0));
+			entries.Add(new RegEntry("R7." + (i + 3), "Noise enabled", (r[7] & (8 << i)) == 0));
+			entries.Add(new RegEntry($"R{8 + i}.0-3", "Volume", amplitude & 0x0F, Format.X8));
+			entries.Add(new RegEntry($"R{8 + i}.4", "Use envelope", (amplitude & 0x10) != 0));
+		}
+
+		int envelopePeriod = r[11] | (r[12] << 8);
+		entries.AddRange(new List<RegEntry>() {
+			new RegEntry("", "Noise"),
+			new RegEntry("R6", "Noise period", r[6] & 0x1F, Format.X8),
+
+			new RegEntry("", "Envelope"),
+			new RegEntry("R11-12", "Envelope period", envelopePeriod, Format.X16),
+			new RegEntry("", "Envelope ramp", $"{ayClock / (256.0 * Math.Max(envelopePeriod, 1)):0.00} Hz", null),
+			new RegEntry("R13", "Envelope shape", _envelopeShapes[r[13] & 0x0F], r[13] & 0x0F),
+			new RegEntry("", "Envelope volume", ay.EnvelopeVolume, Format.X8),
+
+			new RegEntry("", "I/O port A"),
+			new RegEntry("R7.6", "Output mode", (r[7] & 0x40) != 0),
+			new RegEntry("R14", "Value", r[14], Format.X8),
+		});
+
+		entries.Add(new RegEntry("", "Registers"));
+		for(int i = 0; i < 16; i++) {
+			entries.Add(new RegEntry($"R{i}", $"Register {i}", r[i], Format.X8));
+		}
+
+		return new RegisterViewerTab("AY", entries, CpuType.Zx, MemoryType.ZxPort);
 	}
 
 	private static RegisterViewerTab GetUlaTab(ref ZxState zx)

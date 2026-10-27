@@ -120,6 +120,17 @@ struct ZxIoState : public BaseState
 	bool HasPaging;
 };
 
+//AY sound chip (128K), as seen by the debugger
+struct ZxAyState : public BaseState
+{
+	uint8_t Registers[16];
+	uint8_t SelectedRegister;
+	//Current envelope generator output (0-15)
+	uint8_t EnvelopeVolume;
+	//False on models without an AY
+	bool Present;
+};
+
 //Not derived from BaseState (like SmsState etc.): Cpu, which is, could then not be at offset 0, and the layout would
 //no longer match the UI's ZxState
 struct ZxState
@@ -127,6 +138,7 @@ struct ZxState
 	ZxCpuState Cpu;
 	ZxUlaState Ula;
 	ZxIoState Io;
+	ZxAyState Ay;
 };
 
 namespace ZxCpuFlags

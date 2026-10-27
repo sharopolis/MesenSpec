@@ -616,6 +616,7 @@
 			<Control ID="tpgAudio">Audio</Control>
 			<Control ID="grpVolume">Volume</Control>
 			<Control ID="lblBeeper">Beeper</Control>
+			<Control ID="lblAy">AY (128K)</Control>
 
 			<Control ID="tpgInput">Input</Control>
 			<Control ID="lblKeyboard">Keyboard:</Control>

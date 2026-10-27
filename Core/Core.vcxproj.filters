@@ -2628,6 +2628,12 @@
     <ClInclude Include="ZX\Input\ZxKeyboardDevice.h">
       <Filter>ZX\Input</Filter>
     </ClInclude>
+    <ClInclude Include="ZX\ZxAudioChannel.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\ZxAy.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
     <ClInclude Include="ZX\ZxBeeper.h">
       <Filter>ZX</Filter>
     </ClInclude>
@@ -3240,6 +3246,9 @@
       <Filter>ZX</Filter>
     </ClCompile>
     <ClCompile Include="ZX\ZxSnapshot.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxAy.cpp">
       <Filter>ZX</Filter>
     </ClCompile>
     <ClCompile Include="ZX\ZxTape.cpp">

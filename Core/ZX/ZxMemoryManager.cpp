@@ -3,10 +3,12 @@
 #include "ZX/ZxUla.h"
 #include "ZX/ZxKeyboard.h"
 #include "ZX/ZxBeeper.h"
+#include "ZX/ZxAy.h"
 #include "Utilities/Serializer.h"
 
-void ZxMemoryManager::Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper)
+void ZxMemoryManager::Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay)
 {
+	_ay = ay;
 	_model = model;
 	_ula = ula;
 	_keyboard = keyboard;
@@ -135,6 +137,9 @@ uint8_t ZxMemoryManager::PeekPort(uint16_t port)
 		bool ear = _earInput || (_portFe & 0x10);
 		return 0xA0 | (ear ? 0x40 : 0) | _keyboard->Read(port >> 8);
 	}
+	if(_ay && (port & 0xC002) == 0xC000) {
+		return _ay->ReadRegister();
+	}
 	return 0xFF;
 }
 
@@ -171,6 +176,11 @@ uint8_t ZxMemoryManager::ReadPort(uint16_t port, uint64_t cycle)
 		return PeekPort(port);
 	}
 
+	if(_ay && (port & 0xC002) == 0xC000) {
+		//AY register (0xFFFD, decoded from A15, A14 and A1)
+		return _ay->ReadRegister();
+	}
+
 	return _ula->GetFloatingBusValue(cycle);
 }
 
@@ -180,6 +190,15 @@ void ZxMemoryManager::WritePort(uint16_t port, uint8_t value, uint64_t cycle)
 		_portFe = value;
 		_ula->SetBorderColor(cycle, value & 0x07);
 		_beeper->WritePort(cycle, value);
+	}
+
+	if(_ay && (port & 0x8002) == 0x8000) {
+		//AY: 0xFFFD selects a register, 0xBFFD writes it (decoded from A15, A14 and A1)
+		if(port & 0x4000) {
+			_ay->SelectRegister(value);
+		} else {
+			_ay->WriteRegister(cycle, value);
+		}
 	}
 
 	if(HasPaging() && !(port & 0x8002) && !(_port7ffd & 0x20)) {

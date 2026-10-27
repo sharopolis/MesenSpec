@@ -6,6 +6,7 @@
 #include "ZX/ZxMemoryManager.h"
 #include "ZX/ZxKeyboard.h"
 #include "ZX/ZxBeeper.h"
+#include "ZX/ZxAy.h"
 #include "ZX/ZxTape.h"
 #include "Utilities/ISerializable.h"
 
@@ -20,6 +21,7 @@ private:
 	ZxMemoryManager _memoryManager;
 	ZxKeyboard _keyboard;
 	ZxBeeper _beeper;
+	ZxAy _ay;
 	ZxTape _tape;
 
 public:
@@ -52,6 +54,9 @@ public:
 	ZxMemoryManager& GetMemoryManager() { return _memoryManager; }
 	ZxKeyboard& GetKeyboard() { return _keyboard; }
 	ZxBeeper& GetBeeper() { return _beeper; }
+	//The 128K's sound chip (not used on the 48K)
+	ZxAy& GetAy() { return _ay; }
+	bool HasAy() { return _model != ZxModel::Spectrum48K; }
 	ZxTape& GetTape() { return _tape; }
 
 	//Palette indexes, ZxConstants::ScreenWidth x ScreenHeight

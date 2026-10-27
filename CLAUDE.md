@@ -12,8 +12,11 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
   - `ZxCpu` - Z80 derived from `Core/SMS/SmsCpu`, with Fuse-style timing: every memory cycle and every internal
     cycle carries its bus address so the machine can apply ULA contention; ports are 16-bit.
   - `IZxBus` - everything the CPU sees of the machine (contention, memory, ports, /INT).
-  - `ZxMachine` - a complete 48K or 128K (CPU, `ZxUla`, `ZxMemoryManager`, `ZxKeyboard`, `ZxBeeper`, `ZxTape`),
+  - `ZxMachine` - a complete 48K or 128K (CPU, `ZxUla`, `ZxMemoryManager`, `ZxKeyboard`, `ZxBeeper`, `ZxAy`, `ZxTape`),
     independent of the Mesen emulator so the headless tests can use it directly.
+  - Sound: `ZxBeeper` and `ZxAy` (AY-3-8912, 128K only: ports 0xFFFD/0xBFFD, stepped every 16 T-states up to each
+    access) each feed a `ZxAudioChannel` (blip_buf at T-state precision, 44.1kHz). Same sample count per frame, so
+    ZxConsole/ZxRun mix them with separate volumes (`ZxConfig.BeeperVolume`/`AyVolume`). Mono, like the real 128K.
   - `ZxMemoryManager` - four 16K slots; 48K RAM is linear (0x4000-0xFFFF), 128K RAM holds banks 0-7 in order (paged
     through port 0x7FFD, decoded on A15=0/A1=0; odd banks contended; screen in bank 5 or 7). ZxRom/ZxRam memory types
     are these arrays, so debugger absolute addresses go through GetMappedOffset/GetCpuAddress.
@@ -58,10 +61,12 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
 - Settings tab (Options > ZX Spectrum, ZxConfigView): model, beeper volume, keyboard mapping (Setup opens the custom-key
   list). GUI-tested.
 - 128K stage 1 (memory paging, 128K ULA timing, firmware, model setting, register viewer paging rows, save states
-  check the model): boots to the menu, loads tapes through the Tape Loader, Street Fighter II (128K multi-load) loads
-  and runs. No AY yet (port 0xFFFD/0xBFFD writes are ignored). Port accesses only create events (no port
-  breakpoints/script callbacks - same as Mesen's SMS).
-- Next: AY (128K stage 2), 128K snapshots (.sna/.z80), +2/+3, tape controls (rewind/insert - multi-load games ask for
+  check the model): boots to the menu, loads tapes through the Tape Loader, Street Fighter II (128K multi-load) and
+  Target Renegade load and run. GUI-tested. Port accesses only create events (no port breakpoints/script callbacks -
+  same as Mesen's SMS).
+- 128K stage 2: AY (tone/noise/envelope, AY volume table, register read masks), AY volume slider, AY register viewer
+  tab. Unit-tested (tone frequency, all envelope shapes, ports); 128 BASIC PLAY "a" measures 440 Hz.
+- Next: 128K snapshots (.sna/.z80), +2/+3, tape controls (rewind/insert - multi-load games ask for
   rewinds), real-time tape (TZX), Kempston.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
