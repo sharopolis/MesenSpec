@@ -51,6 +51,7 @@ public struct InteropZxConfig
 public enum ZxModel : byte
 {
 	Spectrum48K,
+	Spectrum128K,
 }
 
 public class ZxControllerConfig : ControllerConfig

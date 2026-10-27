@@ -24,7 +24,9 @@ public:
 	size_t GetBlockCount() { return _blocks.size(); }
 	size_t GetNextBlock() { return _nextBlock; }
 
-	//ROM address of LD-BYTES. Call ProcessLoadTrap when the CPU is about to execute it (with the 48K ROM paged in).
-	static constexpr uint16_t LdBytesAddress = 0x0556;
+	//LD-START, inside the ROM's LD-BYTES routine (0x0556). Call ProcessLoadTrap when the CPU is about to execute it (with
+	//the 48K ROM paged in). Loaders that set up their own flag and return address and jump into LD-BYTES past its
+	//entry point (e.g. to 0x0562) all get here.
+	static constexpr uint16_t LoadTrapAddress = 0x056C;
 	bool ProcessLoadTrap(ZxCpu& cpu, ZxMemoryManager& memoryManager);
 };

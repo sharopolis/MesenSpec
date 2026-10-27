@@ -861,6 +861,7 @@ struct WsConfig
 enum class ZxModel : uint8_t
 {
 	Spectrum48K,
+	Spectrum128K,
 };
 
 struct ZxConfig

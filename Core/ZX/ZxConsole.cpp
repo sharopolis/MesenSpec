@@ -33,19 +33,23 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 		return LoadRomResult::Failure;
 	}
 
+	string ext = romFile.GetFileExtension();
+
+	//Snapshots are 48K-only for now, tapes run on the model selected in the settings
+	ZxModel model = ZxSnapshot::IsSnapshot(ext) ? ZxModel::Spectrum48K : _emu->GetSettings()->GetZxConfig().Model;
+
 	vector<uint8_t> rom;
-	if(!FirmwareHelper::LoadZxRom(_emu, rom)) {
+	if(!FirmwareHelper::LoadZxRom(_emu, model, rom)) {
 		return LoadRomResult::Failure;
 	}
 
-	_machine.reset(new ZxMachine());
+	_machine.reset(new ZxMachine(model));
 	_machine->SetDebugHooks(this);
 	_controlManager.reset(new ZxControlManager(_emu));
 	if(!_machine->LoadRom(rom)) {
 		return LoadRomResult::Failure;
 	}
 
-	string ext = romFile.GetFileExtension();
 	string error;
 	if(ZxSnapshot::IsSnapshot(ext)) {
 		_romFormat = RomFormat::ZxSnapshot;
@@ -67,15 +71,15 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 	//Mesen's keyboard shortcuts are disabled while running (except pause) - the whole keyboard belongs to the Spectrum
 	MessageManager::DisplayMessage("Input", "KeyboardModeEnabled");
 
-	_emu->RegisterMemory(MemoryType::ZxRom, _machine->GetMemoryManager().GetRom(), 0x4000);
-	_emu->RegisterMemory(MemoryType::ZxRam, _machine->GetMemoryManager().GetRam(), 0xC000);
+	ZxMemoryManager& memoryManager = _machine->GetMemoryManager();
+	_emu->RegisterMemory(MemoryType::ZxRom, memoryManager.GetRom(), memoryManager.GetRomSize());
+	_emu->RegisterMemory(MemoryType::ZxRam, memoryManager.GetRam(), memoryManager.GetRamSize());
 
 	return LoadRomResult::Success;
 }
 
 void ZxConsole::ScheduleTapeAutoLoad()
 {
-	//Once the ROM has booted (~2 seconds), type LOAD "" ENTER: J (LOAD in K mode), SYMBOL SHIFT+P twice, ENTER
 	_autoKeys.clear();
 	uint32_t frame = _machine->GetUla().GetFrameCount() + 100;
 	auto press = [&](std::initializer_list<std::pair<uint8_t, uint8_t>> keys) {
@@ -86,6 +90,13 @@ void ZxConsole::ScheduleTapeAutoLoad()
 		}
 		frame += 8;
 	};
+	if(_machine->GetModel() == ZxModel::Spectrum128K) {
+		//Once the ROM has booted (~2 seconds), choose "Tape Loader" (the first item of the menu) with ENTER
+		press({ { 6, 0 } });
+		return;
+	}
+
+	//Once the ROM has booted (~2 seconds), type LOAD "" ENTER: J (LOAD in K mode), SYMBOL SHIFT+P twice, ENTER
 	press({ { 6, 3 } }); //J
 	press({ { 7, 1 }, { 5, 0 } }); //SYMBOL SHIFT + P = "
 	press({ { 7, 1 }, { 5, 0 } });
@@ -283,18 +294,19 @@ void ZxConsole::ProcessAudioPlayerAction(AudioPlayerActionParams p)
 
 AddressInfo ZxConsole::GetAbsoluteAddress(AddressInfo& relAddress)
 {
-	uint16_t addr = (uint16_t)relAddress.Address;
-	if(addr < 0x4000) {
-		return { addr, MemoryType::ZxRom };
-	}
-	return { addr - 0x4000, MemoryType::ZxRam };
+	uint32_t offset;
+	bool isRom = _machine->GetMemoryManager().GetMappedOffset((uint16_t)relAddress.Address, offset);
+	return { (int32_t)offset, isRom ? MemoryType::ZxRom : MemoryType::ZxRam };
 }
 
 AddressInfo ZxConsole::GetRelativeAddress(AddressInfo& absAddress, CpuType cpuType)
 {
 	switch(absAddress.Type) {
-		case MemoryType::ZxRom: return { absAddress.Address, MemoryType::ZxMemory };
-		case MemoryType::ZxRam: return { absAddress.Address + 0x4000, MemoryType::ZxMemory };
+		case MemoryType::ZxRom:
+		case MemoryType::ZxRam: {
+			int32_t addr = _machine->GetMemoryManager().GetCpuAddress(absAddress.Type == MemoryType::ZxRom, absAddress.Address);
+			return { addr, addr >= 0 ? MemoryType::ZxMemory : MemoryType::None };
+		}
 		default: return { -1, MemoryType::None };
 	}
 }
@@ -305,6 +317,8 @@ ZxState ZxConsole::GetState()
 	state.Cpu = _machine->GetCpu().GetState();
 	state.Ula = _machine->GetUla().GetState(_machine->GetCpu().GetCycleCount());
 	state.Io.PortFe = _machine->GetMemoryManager().GetPortFe();
+	state.Io.Port7ffd = _machine->GetMemoryManager().GetPort7ffd();
+	state.Io.HasPaging = _machine->GetMemoryManager().HasPaging();
 	state.Io.EarInput = _machine->GetMemoryManager().GetEarInput();
 	for(int i = 0; i < 8; i++) {
 		state.Io.KeyboardRows[i] = _machine->GetKeyboard().GetRow(i);
@@ -319,6 +333,16 @@ void ZxConsole::GetConsoleState(BaseState& state, ConsoleType consoleType)
 
 void ZxConsole::Serialize(Serializer& s)
 {
+	//The memory layout depends on the model - states can only be loaded on the model that saved them
+	ZxModel model = _machine->GetModel();
+	SV(model);
+	if(!s.IsSaving() && model != _machine->GetModel()) {
+		auto getName = [](ZxModel m) { return m == ZxModel::Spectrum128K ? string("128K") : string("48K"); };
+		MessageManager::DisplayMessage("SaveStates", "Can't load " + getName(model) + " state in " + getName(_machine->GetModel()) + " mode.");
+		s.SetErrorFlag();
+		return;
+	}
+
 	SV(_machine);
 	SV(_controlManager);
 }

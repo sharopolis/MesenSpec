@@ -43,11 +43,13 @@ ZxTests/ZxMachineTest: ZxTests/obj/ZxMachineTest.o $(ZXOBJ) $(UTILOBJ)
 
 all: ZxTests/FuseZ80Test ZxTests/ZxRun ZxTests/ZxMachineTest
 
-#The machine tests need a 48K ROM, which is not in the repository (put Fuse's roms/48.rom in ZxTests/roms, or pass ZXROM=path)
+#The machine tests need a 48K ROM, which is not in the repository (put Fuse's roms/48.rom in ZxTests/roms, or pass ZXROM=path).
+#The 128K tests also need Fuse's 128-0.rom and 128-1.rom (or ZXROM128="path/to/128.rom").
 ZXROM ?= $(wildcard ZxTests/roms/48.rom)
+ZXROM128 ?= $(if $(wildcard ZxTests/roms/128-1.rom),ZxTests/roms/128-0.rom ZxTests/roms/128-1.rom)
 test: ZxTests/FuseZ80Test ZxTests/ZxMachineTest
 	ZxTests/FuseZ80Test ZxTests/fuse/tests.in ZxTests/fuse/tests.expected
-	@if [ -n "$(ZXROM)" ]; then ZxTests/ZxMachineTest "$(ZXROM)"; else echo "ZXROM not set - skipping the machine tests"; fi
+	@if [ -n "$(ZXROM)" ]; then ZxTests/ZxMachineTest "$(ZXROM)" $(ZXROM128); else echo "ZXROM not set - skipping the machine tests"; fi
 
 -include $(shell find ZxTests/obj -name '*.d' 2>/dev/null)
 

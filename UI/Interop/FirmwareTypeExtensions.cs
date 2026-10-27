@@ -81,6 +81,8 @@ public static class FirmwareTypeExtensions
 			case FirmwareType.WonderSwanColor: return new("bootrom.wsc") { new(0x2000, "F5A5C044D84CE1681F94E9EF74287CB989784497BE5BD5108DF17908DFA55DB2") };
 			case FirmwareType.SwanCrystal: return new("bootrom_sc.wsc") { new(0x2000, "82E96ADDF5AB1CE09A84B6EEDAA904E4CA432756851F7E0CC0649006C183834D") };
 			case FirmwareType.Zx48K: return new("48.rom") { new(0x4000, "D55DAA439B673B0E3F5897F99AC37ECB45F974D1862B4DADB85DEC34AF99CB42") };
+			//ROM 0 (128K editor) followed by ROM 1 (48K BASIC)
+			case FirmwareType.Zx128K: return new("128.rom") { new(0x8000, "C1FF621D7910105D4EE45C31E9FD8FD0D79A545C78B66C69A562EE1FFBAE8D72") };
 			case FirmwareType.Ymf288AdpcmRom: return new("ymf288_adpcm_rom.bin") { new(0x2000, "53AFD0FA9C62EDA3E2BE939E23F3ADF48A2AF8AD37BB1640261726C5D5ADEBA8") };
 		}
 

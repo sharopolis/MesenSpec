@@ -12,7 +12,7 @@ struct ZxTiming
 	uint16_t LineLength;
 	//Frame line on which the first line of the paper (bitmap) area starts - pixel (0,0) is displayed at FirstPaperLine * LineLength
 	uint16_t FirstPaperLine;
-	//First T-state at which memory contention applies (one before pixel (0,0) is fetched)
+	//First T-state at which memory contention applies (the floating bus returns the first bitmap byte 3 T-states later)
 	uint32_t ContentionStart;
 	//Number of T-states the ULA holds /INT low at the start of each frame
 	uint8_t IrqLength;
@@ -22,6 +22,8 @@ struct ZxTiming
 		switch(model) {
 			default:
 			case ZxModel::Spectrum48K: return { 3500000, 69888, 224, 64, 14335, 32 };
+			//Paper starts at 14364 (line 63), contention 3 T-states earlier
+			case ZxModel::Spectrum128K: return { 3546900, 70908, 228, 63, 14361, 36 };
 		}
 	}
 };
@@ -113,6 +115,9 @@ struct ZxIoState : public BaseState
 	bool EarInput;
 	//Keyboard matrix, one half-row per entry (bits 0-4, 0 = pressed), selected by address lines A8-A15
 	uint8_t KeyboardRows[8];
+	//128K paging register (bits 0-2 RAM bank at 0xC000, bit 3 screen in bank 7, bit 4 ROM 1, bit 5 lock)
+	uint8_t Port7ffd;
+	bool HasPaging;
 };
 
 //Not derived from BaseState (like SmsState etc.): Cpu, which is, could then not be at offset 0, and the layout would

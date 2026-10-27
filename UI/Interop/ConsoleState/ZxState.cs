@@ -82,6 +82,8 @@ public struct ZxIoState : BaseState
 	public byte PortFe;
 	[MarshalAs(UnmanagedType.I1)] public bool EarInput;
 	[MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public byte[] KeyboardRows;
+	public byte Port7ffd;
+	[MarshalAs(UnmanagedType.I1)] public bool HasPaging;
 }
 
 public struct ZxState : BaseState

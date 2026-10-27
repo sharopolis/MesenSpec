@@ -85,9 +85,12 @@ namespace ZxTestUtils
 	inline bool IsCharAt(ZxMachine& zx, uint8_t row, uint8_t col, int ch)
 	{
 		ZxMemoryManager& mm = zx.GetMemoryManager();
+		//The font is in the 48K BASIC ROM (the last 16K of the ROM on every model), the screen is the displayed one
+		uint8_t* font = mm.GetRom() + mm.GetRomSize() - 0x4000 + 0x3D00;
+		uint8_t* screen = mm.GetVideoRam();
 		for(int line = 0; line < 8; line++) {
-			uint16_t screenAddr = 0x4000 + ((row & 0x18) << 8) + ((row & 0x07) << 5) + (line << 8) + col;
-			if(mm.Peek(screenAddr) != mm.Peek(0x3D00 + (ch - 32) * 8 + line)) {
+			uint16_t screenAddr = ((row & 0x18) << 8) + ((row & 0x07) << 5) + (line << 8) + col;
+			if(screen[screenAddr] != font[(ch - 32) * 8 + line]) {
 				return false;
 			}
 		}

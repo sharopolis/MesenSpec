@@ -4,10 +4,11 @@
 #include "ZX/IZxDebugHooks.h"
 #include "Utilities/Serializer.h"
 
-ZxMachine::ZxMachine()
+ZxMachine::ZxMachine(ZxModel model)
 {
+	_model = model;
 	const ZxTiming& timing = ZxTiming::Get(_model);
-	_memoryManager.Init(&_ula, &_keyboard, &_beeper);
+	_memoryManager.Init(_model, &_ula, &_keyboard, &_beeper);
 	_ula.Init(_model, _memoryManager.GetVideoRam());
 	_beeper.Init(timing.CpuClockRate);
 	_cpu.Init(&_memoryManager);
@@ -47,8 +48,8 @@ void ZxMachine::RunFrame()
 	uint64_t frameEnd = _ula.GetFrameStartCycle() + _ula.GetTiming().FrameLength;
 	bool tapeLoaded = _tape.IsLoaded();
 	while(_cpu.GetCycleCount() < frameEnd) {
-		if(tapeLoaded && _cpu.GetState().PC == ZxTape::LdBytesAddress) {
-			//The trap replaces the instruction at LD-BYTES, so let the debugger see it (e.g. for breakpoints) first
+		if(tapeLoaded && _cpu.GetState().PC == ZxTape::LoadTrapAddress && _memoryManager.IsBasicRomPaged()) {
+			//The trap replaces the instruction at LD-START, so let the debugger see it (e.g. for breakpoints) first
 			if(IZxDebugHooks* hooks = _cpu.GetDebugHooks()) {
 				hooks->ProcessInstruction();
 			}

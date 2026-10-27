@@ -23,8 +23,11 @@ private:
 	ZxTape _tape;
 
 public:
-	ZxMachine();
+	ZxMachine(ZxModel model = ZxModel::Spectrum48K);
 
+	ZxModel GetModel() { return _model; }
+
+	//16K for the 48K, 32K (ROM 0 then ROM 1) for the 128K
 	bool LoadRom(const vector<uint8_t>& rom);
 
 	//extension is lowercase, with the dot (".sna", ".z80")

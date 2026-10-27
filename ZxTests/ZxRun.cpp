@@ -2,6 +2,8 @@
 //the keyboard, and saves the final picture as a PNG, the audio as a WAV file, and/or the state as a snapshot.
 //
 //Usage: ZxRun --rom 48.rom [options]
+//  --rom FILE          can be given twice (e.g. 128-0.rom and 128-1.rom) - the files are concatenated, and a 32K ROM
+//                      selects the 128K model
 //  --load FILE         load a .sna/.z80 snapshot (after letting the ROM initialize for 100 frames)
 //  --tape FILE         insert a .tap file (loaded instantly when the ROM's LOAD routine runs)
 //  --frames N          number of frames to run (default 150)
@@ -42,7 +44,8 @@ static string GetExtension(const string& path)
 
 int main(int argc, char** argv)
 {
-	string romPath, loadPath, tapePath, pngPath, wavPath, savePath;
+	vector<string> romPaths;
+	string loadPath, tapePath, pngPath, wavPath, savePath;
 	int frames = 150;
 	bool autoScroll = false;
 	bool printText = false;
@@ -51,7 +54,7 @@ int main(int argc, char** argv)
 	for(int i = 1; i < argc; i++) {
 		string arg = argv[i];
 		if(arg == "--rom" && i + 1 < argc) {
-			romPath = argv[++i];
+			romPaths.push_back(argv[++i]);
 		} else if(arg == "--load" && i + 1 < argc) {
 			loadPath = argv[++i];
 		} else if(arg == "--tape" && i + 1 < argc) {
@@ -77,15 +80,24 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if(romPath.empty()) {
+	if(romPaths.empty()) {
 		fprintf(stderr, "Usage: %s --rom 48.rom [--load file.sna|file.z80] [--tape file.tap] [--frames N] [--type FRAME TEXT]... [--auto-scroll] [--text] [--png out.png] [--wav out.wav] [--save out.sna|out.z80]\n", argv[0]);
 		return 2;
 	}
 
-	unique_ptr<ZxMachine> zx(new ZxMachine());
 	vector<uint8_t> rom;
-	if(!ReadFile(romPath, rom) || !zx->LoadRom(rom)) {
-		fprintf(stderr, "Could not load ROM: %s\n", romPath.c_str());
+	for(string& romPath : romPaths) {
+		vector<uint8_t> data;
+		if(!ReadFile(romPath, data)) {
+			fprintf(stderr, "Could not read ROM: %s\n", romPath.c_str());
+			return 1;
+		}
+		rom.insert(rom.end(), data.begin(), data.end());
+	}
+
+	unique_ptr<ZxMachine> zx(new ZxMachine(rom.size() == 0x8000 ? ZxModel::Spectrum128K : ZxModel::Spectrum48K));
+	if(!zx->LoadRom(rom)) {
+		fprintf(stderr, "Invalid ROM size (%d bytes, expected 16K for the 48K or 32K for the 128K)\n", (int)rom.size());
 		return 1;
 	}
 

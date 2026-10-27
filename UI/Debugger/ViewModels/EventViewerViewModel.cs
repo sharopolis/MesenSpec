@@ -262,6 +262,12 @@ namespace Mesen.Debugger.ViewModels
 		[MemberNotNull(nameof(ViewerBitmap))]
 		private void InitBitmap(FrameInfo size)
 		{
+			if(CpuType == CpuType.Zx) {
+				//One row per frame line, 2 pixels per T-state (both differ between the 48K and 128K)
+				_zxLineLength = (int)size.Width / 2;
+				_zxLineCount = (int)size.Height / 2;
+			}
+
 			if(ViewerBitmap == null || ViewerBitmap.Size.Width != size.Width || ViewerBitmap.Size.Height != size.Height) {
 				ViewerBitmap = new DynamicBitmap(new PixelSize((int)size.Width, (int)size.Height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
 			}
@@ -328,15 +334,15 @@ namespace Mesen.Debugger.ViewModels
 
 		//The Spectrum's event viewer timeline is shifted by the left border's width (24 T-states), so each row starts
 		//with the left border, which the ULA displays at the end of the previous line (see ZxEventManager in the core)
-		private const int ZxLineLength = 224;
-		private const int ZxLineCount = 312;
 		private const int ZxTimelineShift = 24;
+		private int _zxLineLength = 224;
+		private int _zxLineCount = 312;
 
-		private static PixelPoint GetZxEventLocation(int scanline, int cycle)
+		private PixelPoint GetZxEventLocation(int scanline, int cycle)
 		{
-			int frameLength = ZxLineLength * ZxLineCount;
-			int t = ((scanline * ZxLineLength + cycle + ZxTimelineShift) % frameLength + frameLength) % frameLength;
-			return new PixelPoint((t % ZxLineLength) * 2, (t / ZxLineLength) * 2);
+			int frameLength = _zxLineLength * _zxLineCount;
+			int t = ((scanline * _zxLineLength + cycle + ZxTimelineShift) % frameLength + frameLength) % frameLength;
+			return new PixelPoint((t % _zxLineLength) * 2, (t / _zxLineLength) * 2);
 		}
 
 		public void UpdateHighlightPoint(PixelPoint p, DebugEventInfo? eventInfo)
@@ -400,12 +406,12 @@ namespace Mesen.Debugger.ViewModels
 				case CpuType.Zx: {
 					//Convert back from the shifted timeline to the ULA's scanline/cycle
 					result.X = p.X / 2 * 2;
-					int t = (result.Y / 2) * ZxLineLength + result.X / 2 - ZxTimelineShift;
+					int t = (result.Y / 2) * _zxLineLength + result.X / 2 - ZxTimelineShift;
 					if(t < 0) {
-						t += ZxLineLength * ZxLineCount;
+						t += _zxLineLength * _zxLineCount;
 					}
-					xPos = t % ZxLineLength;
-					yPos = t / ZxLineLength;
+					xPos = t % _zxLineLength;
+					yPos = t / _zxLineLength;
 					break;
 				}
 

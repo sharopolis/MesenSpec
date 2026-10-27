@@ -35,7 +35,8 @@ enum class FirmwareType
 	Ymf288AdpcmRom,
 	SmsBootRom,
 	GgBootRom,
-	Zx48K
+	Zx48K,
+	Zx128K
 };
 
 struct MissingFirmwareMessage
@@ -437,22 +438,38 @@ public:
 		return false;
 	}
 
-	static bool LoadZxRom(Emulator* emu, vector<uint8_t>& rom)
+	static bool LoadZxRom(Emulator* emu, ZxModel model, vector<uint8_t>& rom)
 	{
-		string filename = "48.rom";
-		uint32_t size = 0x4000;
-		if(AttemptLoadFirmware(rom, filename, size)) {
+		bool is128 = model == ZxModel::Spectrum128K;
+		string filename = is128 ? "128.rom" : "48.rom";
+		uint32_t size = is128 ? 0x8000 : 0x4000;
+
+		//The 128K ROM is also commonly found as two 16K files (e.g. Fuse's 128-0.rom and 128-1.rom)
+		auto attemptLoad = [&]() {
+			if(AttemptLoadFirmware(rom, filename, size)) {
+				return true;
+			}
+			vector<uint8_t> rom0, rom1;
+			if(is128 && AttemptLoadFirmware(rom0, "128-0.rom", 0x4000) && AttemptLoadFirmware(rom1, "128-1.rom", 0x4000)) {
+				rom = rom0;
+				rom.insert(rom.end(), rom1.begin(), rom1.end());
+				return true;
+			}
+			return false;
+		};
+
+		if(attemptLoad()) {
 			return true;
 		}
 
-		MissingFirmwareMessage msg(filename.c_str(), FirmwareType::Zx48K, size);
+		MissingFirmwareMessage msg(filename.c_str(), is128 ? FirmwareType::Zx128K : FirmwareType::Zx48K, size);
 		emu->GetNotificationManager()->SendNotification(ConsoleNotificationType::MissingFirmware, &msg);
 
-		if(AttemptLoadFirmware(rom, filename, size)) {
+		if(attemptLoad()) {
 			return true;
 		}
 
-		MessageManager::DisplayMessage("Error", "Could not find the ZX Spectrum 48K ROM (48.rom).");
+		MessageManager::DisplayMessage("Error", is128 ? "Could not find the ZX Spectrum 128K ROM (128.rom, or 128-0.rom and 128-1.rom)." : "Could not find the ZX Spectrum 48K ROM (48.rom).");
 		return false;
 	}
 

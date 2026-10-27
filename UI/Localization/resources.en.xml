@@ -2916,6 +2916,7 @@ E
 			<Value ID="SmsBootRom">Master System - Boot ROM</Value>
 			<Value ID="GgBootRom">Game Gear - Boot ROM</Value>
 			<Value ID="Zx48K">ZX Spectrum 48K - ROM</Value>
+			<Value ID="Zx128K">ZX Spectrum 128K - ROM (32 KB: ROM 0 then ROM 1)</Value>
 		</Enum>
 
 		<Enum ID="CpuType">
@@ -3053,6 +3054,7 @@ E
 		</Enum>
 		<Enum ID="ZxModel">
 			<Value ID="Spectrum48K">ZX Spectrum 48K</Value>
+			<Value ID="Spectrum128K">ZX Spectrum 128K</Value>
 		</Enum>
 		<Enum ID="WsModel">
 			<Value ID="Auto">Auto</Value>

@@ -5,11 +5,14 @@
 #include "ZX/ZxBeeper.h"
 #include "Utilities/Serializer.h"
 
-void ZxMemoryManager::Init(ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper)
+void ZxMemoryManager::Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper)
 {
+	_model = model;
 	_ula = ula;
 	_keyboard = keyboard;
 	_beeper = beeper;
+	_romSize = HasPaging() ? BankSize * 2 : BankSize;
+	_ramSize = HasPaging() ? BankSize * 8 : BankSize * 3;
 	Reset();
 }
 
@@ -17,22 +20,84 @@ void ZxMemoryManager::Reset()
 {
 	memset(_ram, 0, sizeof(_ram));
 	_portFe = 0;
+	_port7ffd = 0;
 	_earInput = false;
+	UpdateMapping();
+}
+
+void ZxMemoryManager::UpdateMapping()
+{
+	if(!HasPaging()) {
+		_slots[0] = _rom;
+		_slots[1] = _ram;
+		_slots[2] = _ram + BankSize;
+		_slots[3] = _ram + BankSize * 2;
+		_slotContended[0] = false;
+		_slotContended[1] = true;
+		_slotContended[2] = false;
+		_slotContended[3] = false;
+		_videoRamOffset = 0;
+	} else {
+		uint8_t bank = _port7ffd & 0x07;
+		_slots[0] = _rom + ((_port7ffd & 0x10) ? BankSize : 0);
+		_slots[1] = _ram + BankSize * 5;
+		_slots[2] = _ram + BankSize * 2;
+		_slots[3] = _ram + BankSize * bank;
+		_slotContended[0] = false;
+		_slotContended[1] = true;
+		_slotContended[2] = false;
+		_slotContended[3] = (bank & 0x01) != 0;
+		_videoRamOffset = BankSize * ((_port7ffd & 0x08) ? 7 : 5);
+	}
+
+	if(_ula) {
+		_ula->SetVideoRam(GetVideoRam());
+	}
 }
 
 bool ZxMemoryManager::LoadRom(const vector<uint8_t>& rom)
 {
-	if(rom.size() != sizeof(_rom)) {
+	if(rom.size() != _romSize) {
 		return false;
 	}
-	memcpy(_rom, rom.data(), sizeof(_rom));
+	memcpy(_rom, rom.data(), _romSize);
 	return true;
+}
+
+bool ZxMemoryManager::GetMappedOffset(uint16_t addr, uint32_t& offset)
+{
+	uint8_t* ptr = _slots[addr >> 14] + (addr & 0x3FFF);
+	if(addr < 0x4000) {
+		offset = (uint32_t)(ptr - _rom);
+		return true;
+	}
+	offset = (uint32_t)(ptr - _ram);
+	return false;
+}
+
+int32_t ZxMemoryManager::GetCpuAddress(bool rom, uint32_t offset)
+{
+	for(int slot = rom ? 0 : 1; slot < (rom ? 1 : 4); slot++) {
+		uint32_t start = (uint32_t)(_slots[slot] - (rom ? _rom : _ram));
+		if(offset >= start && offset < start + BankSize) {
+			return (slot << 14) | (offset - start);
+		}
+	}
+	return -1;
+}
+
+void ZxMemoryManager::SetPort7ffd(uint8_t value)
+{
+	if(HasPaging()) {
+		_port7ffd = value;
+		UpdateMapping();
+	}
 }
 
 void ZxMemoryManager::DirectWrite(uint16_t addr, uint8_t value)
 {
 	if(addr >= 0x4000) {
-		_ram[addr - 0x4000] = value;
+		_slots[addr >> 14][addr & 0x3FFF] = value;
 	}
 }
 
@@ -43,7 +108,7 @@ uint8_t ZxMemoryManager::GetContention(uint16_t addr, uint64_t cycle, bool mreq)
 
 uint8_t ZxMemoryManager::Read(uint16_t addr, uint64_t cycle, MemoryOperationType type)
 {
-	return addr < 0x4000 ? _rom[addr] : _ram[addr - 0x4000];
+	return _slots[addr >> 14][addr & 0x3FFF];
 }
 
 void ZxMemoryManager::Write(uint16_t addr, uint8_t value, uint64_t cycle)
@@ -51,16 +116,17 @@ void ZxMemoryManager::Write(uint16_t addr, uint8_t value, uint64_t cycle)
 	if(addr < 0x4000) {
 		return;
 	}
-	if(addr < 0x5B00) {
+	uint8_t* ptr = _slots[addr >> 14] + (addr & 0x3FFF);
+	if((uint32_t)(ptr - _ram) - _videoRamOffset < 0x1B00) {
 		//Screen memory - draw what the beam has already displayed before changing it
 		_ula->Render(cycle);
 	}
-	_ram[addr - 0x4000] = value;
+	*ptr = value;
 }
 
 uint8_t ZxMemoryManager::Peek(uint16_t addr)
 {
-	return addr < 0x4000 ? _rom[addr] : _ram[addr - 0x4000];
+	return _slots[addr >> 14][addr & 0x3FFF];
 }
 
 uint8_t ZxMemoryManager::PeekPort(uint16_t port)
@@ -115,6 +181,16 @@ void ZxMemoryManager::WritePort(uint16_t port, uint8_t value, uint64_t cycle)
 		_ula->SetBorderColor(cycle, value & 0x07);
 		_beeper->WritePort(cycle, value);
 	}
+
+	if(HasPaging() && !(port & 0x8002) && !(_port7ffd & 0x20)) {
+		//128K paging: decoded from A1 and A15 only (0x7FFD is the documented address)
+		if((value ^ _port7ffd) & 0x08) {
+			//Screen bank change - draw what the beam has already displayed first
+			_ula->Render(cycle);
+		}
+		_port7ffd = value;
+		UpdateMapping();
+	}
 }
 
 bool ZxMemoryManager::IsIrqActive(uint64_t cycle)
@@ -124,7 +200,11 @@ bool ZxMemoryManager::IsIrqActive(uint64_t cycle)
 
 void ZxMemoryManager::Serialize(Serializer& s)
 {
-	SVArray(_ram, sizeof(_ram));
+	SVArray(_ram, _ramSize);
 	SV(_portFe);
 	SV(_earInput);
+	SV(_port7ffd);
+	if(!s.IsSaving()) {
+		UpdateMapping();
+	}
 }

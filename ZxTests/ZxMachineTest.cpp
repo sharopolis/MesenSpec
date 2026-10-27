@@ -1,5 +1,5 @@
-//Tests for the 48K machine (ULA timing, contention, interrupts, keyboard, snapshots).
-//Usage: ZxMachineTest <48.rom>
+//Tests for the 48K and 128K machines (ULA timing, contention, paging, interrupts, keyboard, snapshots).
+//Usage: ZxMachineTest <48.rom> [<128-0.rom> <128-1.rom> | <128.rom>]
 #include "pch.h"
 #include "ZX/ZxMachine.h"
 #include "ZxTestUtils.h"
@@ -158,6 +158,41 @@ static void TestKeyboard(const vector<uint8_t>& rom)
 	CHECK((mm.ReadPort(0x7AFE, 0) & 0x1F) == 0x1E, "SPACE and Q with rows 0x7F and 0xFB selected");
 }
 
+static void TestTapeTrap(const vector<uint8_t>& rom)
+{
+	//A custom loader: its own flag (0x88) in A', its own return address, and a jump into LD-BYTES past its entry point
+	//(like Target Renegade's). The trap at LD-START must load the block and return to that address.
+	unique_ptr<ZxMachine> zx = CreateMachine(rom);
+	RunFrames(*zx, 100);
+	vector<uint8_t> tap = { 5, 0, 0x88, 0x11, 0x22, 0x33, (uint8_t)(0x88 ^ 0x11 ^ 0x22 ^ 0x33) };
+	string error;
+	CHECK(zx->LoadTape(tap, error), "tape: %s", error.c_str());
+
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	const uint8_t code[] = {
+		0xDD, 0x21, 0x00, 0x90, //LD IX,0x9000
+		0x11, 0x03, 0x00,       //LD DE,3
+		0x3E, 0x88,             //LD A,0x88
+		0x37,                   //SCF (LOAD)
+		0x08,                   //EX AF,AF'
+		0x21, 0x00, 0x81,       //LD HL,0x8100
+		0xE5,                   //PUSH HL
+		0xC3, 0x62, 0x05,       //JP 0x0562
+	};
+	for(size_t i = 0; i < sizeof(code); i++) {
+		mm.DirectWrite(0x8000 + (uint16_t)i, code[i]);
+	}
+	mm.DirectWrite(0x8100, 0x18); //JR $
+	mm.DirectWrite(0x8101, 0xFE);
+	ZxCpuState& s = zx->GetCpu().GetState();
+	s.PC = 0x8000;
+	s.SP = 0xF000;
+	RunFrames(*zx, 1);
+	CHECK(s.PC == 0x8100, "returned to the loader's address: PC=%04X", s.PC);
+	CHECK(mm.Peek(0x9000) == 0x11 && mm.Peek(0x9001) == 0x22 && mm.Peek(0x9002) == 0x33, "block loaded: %02X %02X %02X", mm.Peek(0x9000), mm.Peek(0x9001), mm.Peek(0x9002));
+	CHECK(zx->GetTape().GetNextBlock() == 1, "tape advanced");
+}
+
 static void TestSnapshots(const vector<uint8_t>& rom)
 {
 	//Enter a program, save a snapshot, load it in a new machine and run the program there
@@ -203,10 +238,121 @@ static void TestSnapshots(const vector<uint8_t>& rom)
 	}
 }
 
+static unique_ptr<ZxMachine> Create128(const vector<uint8_t>& rom)
+{
+	unique_ptr<ZxMachine> zx(new ZxMachine(ZxModel::Spectrum128K));
+	zx->LoadRom(rom);
+	return zx;
+}
+
+static void Test128Boot(const vector<uint8_t>& rom)
+{
+	unique_ptr<ZxMachine> zx = Create128(rom);
+	RunFrames(*zx, 150);
+	string text = GetScreenText(*zx);
+	CHECK(text.find("Tape Loader") != string::npos && text.find("48 BASIC") != string::npos, "128K menu not found:\n%s", text.c_str());
+	CHECK(IsTextOnScreen(*zx, 23, "\x7f 1986 Sinclair Research Ltd"), "128K copyright message not found:\n%s", text.c_str());
+}
+
+static void Test128Paging(const vector<uint8_t>& rom)
+{
+	unique_ptr<ZxMachine> zx = Create128(rom);
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	uint8_t* ram = mm.GetRam();
+	uint64_t f = zx->GetUla().GetFrameStartCycle();
+	auto out = [&](uint16_t port, uint8_t value) { mm.WritePort(port, value, f + 1000); };
+
+	//Each bank can be paged at 0xC000 - bank 5 is also at 0x4000 and bank 2 at 0x8000
+	for(int bank = 0; bank < 8; bank++) {
+		out(0x7FFD, bank);
+		mm.DirectWrite(0xC000, 0x10 + bank);
+	}
+	for(int bank = 0; bank < 8; bank++) {
+		CHECK(ram[bank * 0x4000] == 0x10 + bank, "bank %d: %02X", bank, ram[bank * 0x4000]);
+	}
+	CHECK(mm.Peek(0x4000) == 0x15, "bank 5 at 0x4000: %02X", mm.Peek(0x4000));
+	CHECK(mm.Peek(0x8000) == 0x12, "bank 2 at 0x8000: %02X", mm.Peek(0x8000));
+
+	//ROM 0 (128K editor) or ROM 1 (48K BASIC)
+	out(0x7FFD, 0x00);
+	CHECK(mm.Peek(0x0001) == rom[0x0001] && !mm.IsBasicRomPaged(), "ROM 0 paged in");
+	out(0x7FFD, 0x10);
+	CHECK(mm.Peek(0x0001) == rom[0x4001] && mm.IsBasicRomPaged(), "ROM 1 paged in");
+
+	//Screen in bank 5 or 7
+	out(0x7FFD, 0x08);
+	CHECK(mm.GetVideoRam() == ram + 7 * 0x4000, "shadow screen (bank 7)");
+	out(0x7FFD, 0x00);
+	CHECK(mm.GetVideoRam() == ram + 5 * 0x4000, "normal screen (bank 5)");
+
+	//Decoded from A15 = 0 and A1 = 0 only
+	out(0x7FFF, 0x01);
+	CHECK(mm.GetPort7ffd() == 0x00, "0x7FFF is not the paging port");
+	out(0xFFFD, 0x01);
+	CHECK(mm.GetPort7ffd() == 0x00, "0xFFFD (AY) is not the paging port");
+	out(0x3FFD, 0x01);
+	CHECK(mm.GetPort7ffd() == 0x01, "0x3FFD is decoded as the paging port");
+
+	//Bit 5 locks paging until the next reset
+	out(0x7FFD, 0x23);
+	out(0x7FFD, 0x04);
+	CHECK(mm.GetPort7ffd() == 0x23 && mm.Peek(0xC000) == 0x13, "paging locked: %02X", mm.GetPort7ffd());
+	zx->Reset();
+	CHECK(mm.GetPort7ffd() == 0x00, "reset unlocks paging");
+
+	//Odd banks are contended, also at 0xC000 (and for I/O with a high byte in 0xC000-0xFFFF)
+	uint32_t c = zx->GetUla().GetTiming().ContentionStart;
+	out(0x7FFD, 0x01);
+	CHECK(mm.GetContention(0xC000, f + c, true) == 6, "bank 1 at 0xC000 is contended");
+	CHECK(mm.ContendPortPre(0xC0FF, f + c) == 7, "I/O with the high byte in contended bank 1");
+	out(0x7FFD, 0x02);
+	CHECK(mm.GetContention(0xC000, f + c, true) == 0, "bank 2 at 0xC000 is not contended");
+	CHECK(mm.GetContention(0x4000, f + c, true) == 6, "bank 5 at 0x4000 is contended");
+	CHECK(mm.GetContention(0x8000, f + c, true) == 0, "bank 2 at 0x8000 is not contended");
+}
+
+static void Test128Ula(const vector<uint8_t>& rom)
+{
+	//Documented 128K values: 228 T-states per line, 311 lines, contention from 14361, floating bus first bitmap read at 14364
+	unique_ptr<ZxMachine> zx = Create128(rom);
+	ZxUla& ula = zx->GetUla();
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	uint64_t f = ula.GetFrameStartCycle();
+	CHECK(ula.GetTiming().FrameLength == 70908 && ula.GetScanlineCount() == 311, "128K frame: %u T-states", ula.GetTiming().FrameLength);
+
+	struct { uint32_t T; uint8_t Delay; } expected[] = {
+		{ 14360, 0 }, { 14361, 6 }, { 14362, 5 }, { 14367, 0 }, { 14369, 6 }, { 14361 + 127, 0 }, { 14361 + 228, 6 },
+		{ 14361 + 191 * 228, 6 }, { 14361 + 192 * 228, 0 },
+	};
+	for(auto& e : expected) {
+		uint8_t delay = ula.GetContentionDelay(f + e.T);
+		CHECK(delay == e.Delay, "128K T=%u: delay %d, expected %d", e.T, delay, e.Delay);
+	}
+
+	mm.DirectWrite(0x4000, 0xA5);
+	mm.DirectWrite(0x5800, 0x5A);
+	CHECK(mm.ReadPort(0x40FF, f + 14363) == 0xFF, "floating bus before the paper");
+	CHECK(mm.ReadPort(0x40FF, f + 14364) == 0xA5, "floating bus bitmap at 14364: %02X", mm.ReadPort(0x40FF, f + 14364));
+	CHECK(mm.ReadPort(0x40FF, f + 14365) == 0x5A, "floating bus attribute at 14365: %02X", mm.ReadPort(0x40FF, f + 14365));
+
+	RunFrames(*zx, 1);
+	CHECK(ula.GetFrameStartCycle() == f + 70908, "frame length");
+
+	//The picture comes from the shadow screen when bit 3 is set: pixel (0,0) of bank 7 in red ink
+	uint8_t* bank7 = mm.GetRam() + 7 * 0x4000;
+	bank7[0] = 0x80;
+	bank7[0x1800] = 0x02;
+	mm.SetPort7ffd(0x08);
+	ula.EndFrame();
+	uint16_t* fb = ula.GetFrameBuffer();
+	uint32_t paper = ZxConstants::BorderHeight * ZxConstants::ScreenWidth + ZxConstants::BorderWidth;
+	CHECK(fb[paper] == 2 && fb[paper + 1] == 0, "shadow screen drawn: %d %d", fb[paper], fb[paper + 1]);
+}
+
 int main(int argc, char** argv)
 {
 	if(argc < 2) {
-		fprintf(stderr, "Usage: %s <48.rom>\n", argv[0]);
+		fprintf(stderr, "Usage: %s <48.rom> [<128-0.rom> <128-1.rom> | <128.rom>]\n", argv[0]);
 		return 2;
 	}
 	vector<uint8_t> rom;
@@ -221,6 +367,28 @@ int main(int argc, char** argv)
 	TestFloatingBus(rom);
 	TestKeyboard(rom);
 	TestSnapshots(rom);
+	TestTapeTrap(rom);
+
+	//128K tests, if its ROM is given (one 32K file or the two 16K halves)
+	vector<uint8_t> rom128;
+	for(int i = 2; i < argc; i++) {
+		vector<uint8_t> data;
+		if(!ReadFile(argv[i], data)) {
+			fprintf(stderr, "Could not load ROM: %s\n", argv[i]);
+			return 2;
+		}
+		rom128.insert(rom128.end(), data.begin(), data.end());
+	}
+	if(rom128.size() == 0x8000) {
+		Test128Boot(rom128);
+		Test128Paging(rom128);
+		Test128Ula(rom128);
+	} else if(argc > 2) {
+		fprintf(stderr, "The 128K ROM must be 32K in total\n");
+		return 2;
+	} else {
+		printf("No 128K ROM given - skipping the 128K tests\n");
+	}
 
 	printf("%d passed, %d failed\n", _passed, _failed);
 	return _failed ? 1 : 0;

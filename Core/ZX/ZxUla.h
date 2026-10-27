@@ -64,6 +64,9 @@ public:
 	void Render(uint64_t cycle);
 
 	void SetBorderColor(uint64_t cycle, uint8_t color);
+
+	//128K: the screen can be shown from bank 5 or 7 (call Render first when it changes mid-frame)
+	void SetVideoRam(uint8_t* videoRam) { _videoRam = videoRam; }
 	uint8_t GetBorderColor() { return _borderColor; }
 
 	//Called by the machine when the frame ends (after the last instruction that started in it)

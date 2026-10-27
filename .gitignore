@@ -193,6 +193,7 @@ UI/Dependencies.zip
 # Spectrum programs/ROMs kept in the repo folder for testing (not distributable)
 /*.tap
 /*.tzx
+/*.zip
 /*.sna
 /*.z80
 /*.rom

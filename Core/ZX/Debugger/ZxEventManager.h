@@ -29,7 +29,7 @@ struct ZxEventViewerConfig : public BaseEventViewerConfig
 	bool ShowPreviousFrameEvents;
 };
 
-//Events are shown at the T-state they happen: one row per frame line (224 T-states), 2 pixels per T-state.
+//Events are shown at the T-state they happen: one row per frame line (224 T-states on the 48K, 228 on the 128K), 2 pixels per T-state.
 //The timeline is shifted so the picture appears unbroken: each row starts with the left border, which the
 //ULA displays at the end of the previous line's T-states.
 class ZxEventManager final : public BaseEventManager

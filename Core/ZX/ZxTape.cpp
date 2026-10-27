@@ -42,15 +42,17 @@ bool ZxTape::ProcessLoadTrap(ZxCpu& cpu, ZxMemoryManager& memoryManager)
 		return false;
 	}
 
-	//Entry: A = expected flag byte, carry set = LOAD (reset = VERIFY), IX = destination, DE = length
+	//LD-BYTES has swapped AF: A' = expected flag byte, carry' set = LOAD (reset = VERIFY). IX = destination, DE = length,
+	//and the return address (SA/LD-RET, or the loader's own) is on the stack.
 	ZxCpuState& s = cpu.GetState();
 	const vector<uint8_t>& block = _blocks[_nextBlock++];
-	bool isLoad = (s.Flags & ZxCpuFlags::Carry) != 0;
+	bool isLoad = (s.AltFlags & ZxCpuFlags::Carry) != 0;
+	uint8_t expectedFlag = s.AltA;
 	uint16_t addr = (s.IXH << 8) | s.IXL;
 	uint16_t length = (s.D << 8) | s.E;
 
 	bool success = false;
-	if(!block.empty() && block[0] == s.A) {
+	if(!block.empty() && block[0] == expectedFlag) {
 		uint8_t parity = block[0];
 		uint32_t available = (uint32_t)block.size() - 1;
 		uint32_t count = std::min<uint32_t>(length, available);
@@ -84,7 +86,9 @@ bool ZxTape::ProcessLoadTrap(ZxCpu& cpu, ZxMemoryManager& memoryManager)
 		s.Flags &= ~ZxCpuFlags::Carry;
 	}
 
-	//Continue at SA/LD-RET, which restores the border, re-enables interrupts and returns to LD-BYTES' caller
-	s.PC = 0x053F;
+	//Return like LD-BYTES does - normally to SA/LD-RET, which restores the border, re-enables interrupts and returns to
+	//LD-BYTES' caller
+	s.PC = memoryManager.Peek(s.SP) | (memoryManager.Peek(s.SP + 1) << 8);
+	s.SP += 2;
 	return true;
 }

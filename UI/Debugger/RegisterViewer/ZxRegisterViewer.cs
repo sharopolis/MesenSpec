@@ -51,6 +51,18 @@ public class ZxRegisterViewer
 			new RegEntry("$FE.6", "EAR input (tape)", io.EarInput),
 		};
 
+		if(io.HasPaging) {
+			int p = io.Port7ffd;
+			entries.AddRange(new List<RegEntry>() {
+				new RegEntry("", "Port $7FFD (128K paging)"),
+				new RegEntry("$7FFD", "Last value written", io.Port7ffd, Format.X8),
+				new RegEntry("$7FFD.0-2", "RAM bank at $C000", "Bank " + (p & 0x07), p & 0x07),
+				new RegEntry("$7FFD.3", "Screen", (p & 0x08) != 0 ? "Bank 7 (shadow)" : "Bank 5 (normal)", (p >> 3) & 0x01),
+				new RegEntry("$7FFD.4", "ROM", (p & 0x10) != 0 ? "ROM 1 (48K BASIC)" : "ROM 0 (128K editor)", (p >> 4) & 0x01),
+				new RegEntry("$7FFD.5", "Paging locked", (p & 0x20) != 0),
+			});
+		}
+
 		return new RegisterViewerTab("ULA", entries, CpuType.Zx, MemoryType.ZxPort);
 	}
 

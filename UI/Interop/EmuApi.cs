@@ -286,7 +286,8 @@ namespace Mesen.Interop
 		Ymf288AdpcmRom,
 		SmsBootRom,
 		GgBootRom,
-		Zx48K
+		Zx48K,
+		Zx128K
 	}
 
 	public struct MissingFirmwareMessage
