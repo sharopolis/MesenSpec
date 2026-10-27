@@ -39,6 +39,7 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 	}
 
 	_machine.reset(new ZxMachine());
+	_machine->SetDebugHooks(this);
 	_controlManager.reset(new ZxControlManager(_emu));
 	if(!_machine->LoadRom(rom)) {
 		return LoadRomResult::Failure;
@@ -122,14 +123,10 @@ void ZxConsole::RunFrame()
 	_emu->ProcessEvent(EventType::EndFrame, CpuType::Zx);
 	_emu->GetNotificationManager()->SendNotification(ConsoleNotificationType::PpuFrameDone);
 
-	uint16_t* outputBuffer = _outputBuffers[_currentBuffer];
-	_currentBuffer ^= 1;
-	memcpy(outputBuffer, _machine->GetFrameBuffer(), sizeof(_outputBuffers[0]));
-	RenderedFrame frame(outputBuffer, ZxConstants::ScreenWidth, ZxConstants::ScreenHeight, 1.0, _machine->GetUla().GetFrameCount(), _controlManager->GetPortStates());
-	bool rewinding = _emu->GetRewindManager()->IsRewinding();
-	_emu->GetVideoDecoder()->UpdateFrame(frame, rewinding, rewinding);
+	SendFrame(_machine->GetFrameBuffer());
 
 	_emu->ProcessEndOfFrame();
+	_emu->ProcessEvent(EventType::StartFrame, CpuType::Zx);
 	_controlManager->UpdateControlDevices();
 	_controlManager->UpdateInputState();
 
@@ -143,6 +140,70 @@ void ZxConsole::RunFrame()
 		_stereoSamples[i * 2 + 1] = sample;
 	}
 	_emu->GetSoundMixer()->PlayAudioBuffer(_stereoSamples.data(), (uint32_t)samples.size(), ZxBeeper::SampleRate);
+}
+
+void ZxConsole::SendFrame(uint16_t* frameBuffer)
+{
+	uint16_t* outputBuffer = _outputBuffers[_currentBuffer];
+	_currentBuffer ^= 1;
+	memcpy(outputBuffer, frameBuffer, sizeof(_outputBuffers[0]));
+	RenderedFrame frame(outputBuffer, ZxConstants::ScreenWidth, ZxConstants::ScreenHeight, 1.0, _machine->GetUla().GetFrameCount(), _controlManager->GetPortStates());
+	bool rewinding = _emu->GetRewindManager()->IsRewinding();
+	_emu->GetVideoDecoder()->UpdateFrame(frame, rewinding, rewinding);
+}
+
+void ZxConsole::DebugSendFrame()
+{
+	//Draw up to the current T-state, and blank what the beam hasn't reached yet
+	ZxUla& ula = _machine->GetUla();
+	ula.Render(_machine->GetCpu().GetCycleCount());
+	uint16_t frameBuffer[ZxConstants::PixelCount];
+	memcpy(frameBuffer, ula.GetFrameBuffer(), sizeof(frameBuffer));
+	uint32_t drawn = std::min(ula.GetDrawnPixelCount(), ZxConstants::PixelCount);
+	std::fill(frameBuffer + drawn, frameBuffer + ZxConstants::PixelCount, 0);
+	SendFrame(frameBuffer);
+}
+
+void ZxConsole::ProcessInstruction()
+{
+	_emu->ProcessPpuCycle<CpuType::Zx>();
+	_emu->ProcessInstruction<CpuType::Zx>();
+}
+
+void ZxConsole::ProcessHaltedCpu()
+{
+	_emu->ProcessPpuCycle<CpuType::Zx>();
+	_emu->ProcessHaltedCpu<CpuType::Zx>();
+}
+
+void ZxConsole::ProcessInterrupt(uint16_t originalPc, uint16_t currentPc, bool forNmi)
+{
+	_emu->ProcessInterrupt<CpuType::Zx>(originalPc, currentPc, forNmi);
+}
+
+void ZxConsole::ProcessMemoryRead(uint16_t addr, uint8_t& value, MemoryOperationType type)
+{
+	_emu->ProcessMemoryRead<CpuType::Zx>(addr, value, type);
+}
+
+bool ZxConsole::ProcessMemoryWrite(uint16_t addr, uint8_t& value)
+{
+	return _emu->ProcessMemoryWrite<CpuType::Zx>(addr, value, MemoryOperationType::Write);
+}
+
+void ZxConsole::ProcessPortRead(uint16_t port, uint8_t& value)
+{
+	_emu->ProcessMemoryAccess<CpuType::Zx, MemoryType::ZxPort, MemoryOperationType::Read>(port, value);
+}
+
+void ZxConsole::ProcessPortWrite(uint16_t port, uint8_t& value)
+{
+	_emu->ProcessMemoryAccess<CpuType::Zx, MemoryType::ZxPort, MemoryOperationType::Write>(port, value);
+}
+
+void ZxConsole::ProcessEvent(EventType type)
+{
+	_emu->ProcessEvent(type, CpuType::Zx);
 }
 
 BaseControlManager* ZxConsole::GetControlManager()
@@ -242,6 +303,12 @@ ZxState ZxConsole::GetState()
 {
 	ZxState state;
 	state.Cpu = _machine->GetCpu().GetState();
+	state.Ula = _machine->GetUla().GetState(_machine->GetCpu().GetCycleCount());
+	state.Io.PortFe = _machine->GetMemoryManager().GetPortFe();
+	state.Io.EarInput = _machine->GetMemoryManager().GetEarInput();
+	for(int i = 0; i < 8; i++) {
+		state.Io.KeyboardRows[i] = _machine->GetKeyboard().GetRow(i);
+	}
 	return state;
 }
 

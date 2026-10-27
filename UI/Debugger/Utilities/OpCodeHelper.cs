@@ -27,6 +27,7 @@ public static class OpCodeHelper
 		InitSmsDocumentation();
 		InitGbaDocumentation();
 		InitWsDocumentation();
+		InitZxDocumentation();
 	}
 
 	public static DynamicTooltip? GetTooltip(CodeSegmentInfo seg)
@@ -139,6 +140,12 @@ public static class OpCodeHelper
 	{
 		//TODOSMS add missing descriptions, etc.
 		InitDocumentation(CpuType.Sms, ReadDocumentationFile("SmsDocumentation.json"));
+	}
+
+	private static void InitZxDocumentation()
+	{
+		//Same Z80 instruction set as the SMS
+		InitDocumentation(CpuType.Zx, ReadDocumentationFile("SmsDocumentation.json"));
 	}
 
 	private static void InitWsDocumentation()

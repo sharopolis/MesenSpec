@@ -249,6 +249,7 @@ namespace Mesen.Debugger.ViewModels
 				CpuType.Sms => Config.SmsConfig,
 				CpuType.Gba => Config.GbaConfig,
 				CpuType.Ws => Config.WsConfig,
+				CpuType.Zx => Config.ZxConfig,
 				_ => throw new Exception("Invalid cpu type")
 			};
 		}
@@ -320,8 +321,22 @@ namespace Mesen.Debugger.ViewModels
 				CpuType.Sms => new PixelPoint(evt.Cycle * 2, evt.Scanline * 2),
 				CpuType.Gba => new PixelPoint(evt.Cycle, evt.Scanline * 4),
 				CpuType.Ws => new PixelPoint(evt.Cycle * 2, evt.Scanline * 2),
+				CpuType.Zx => GetZxEventLocation(evt.Scanline, evt.Cycle),
 				_ => throw new Exception("Invalid cpu type")
 			};
+		}
+
+		//The Spectrum's event viewer timeline is shifted by the left border's width (24 T-states), so each row starts
+		//with the left border, which the ULA displays at the end of the previous line (see ZxEventManager in the core)
+		private const int ZxLineLength = 224;
+		private const int ZxLineCount = 312;
+		private const int ZxTimelineShift = 24;
+
+		private static PixelPoint GetZxEventLocation(int scanline, int cycle)
+		{
+			int frameLength = ZxLineLength * ZxLineCount;
+			int t = ((scanline * ZxLineLength + cycle + ZxTimelineShift) % frameLength + frameLength) % frameLength;
+			return new PixelPoint((t % ZxLineLength) * 2, (t / ZxLineLength) * 2);
 		}
 
 		public void UpdateHighlightPoint(PixelPoint p, DebugEventInfo? eventInfo)
@@ -382,6 +397,18 @@ namespace Mesen.Debugger.ViewModels
 					yPos = result.Y / 2;
 					break;
 
+				case CpuType.Zx: {
+					//Convert back from the shifted timeline to the ULA's scanline/cycle
+					result.X = p.X / 2 * 2;
+					int t = (result.Y / 2) * ZxLineLength + result.X / 2 - ZxTimelineShift;
+					if(t < 0) {
+						t += ZxLineLength * ZxLineCount;
+					}
+					xPos = t % ZxLineLength;
+					yPos = t / ZxLineLength;
+					break;
+				}
+
 				default:
 					throw new Exception("Invalid cpu type");
 			}
@@ -407,6 +434,8 @@ namespace Mesen.Debugger.ViewModels
 				DebugApi.SetEventViewerConfig(CpuType, smsCfg.ToInterop());
 			} else if(ConsoleConfig is WsEventViewerConfig wsCfg) {
 				DebugApi.SetEventViewerConfig(CpuType, wsCfg.ToInterop());
+			} else if(ConsoleConfig is ZxEventViewerConfig zxCfg) {
+				DebugApi.SetEventViewerConfig(CpuType, zxCfg.ToInterop());
 			}
 		}
 

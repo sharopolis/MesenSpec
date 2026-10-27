@@ -6,8 +6,8 @@ CC ?= gcc
 CXXFLAGS ?= -O2 -g
 CXXFLAGS += -Wall --std=c++17 -I . -I Core -I Utilities -MMD -MP
 
-#The standalone machine only - ZxConsole/ZxControlManager connect it to the Mesen emulator and need the whole core
-ZXSRC := $(filter-out Core/ZX/ZxConsole.cpp Core/ZX/ZxControlManager.cpp,$(shell find Core/ZX -name '*.cpp'))
+#The standalone machine only - ZxConsole/ZxControlManager and Debugger/ connect it to the Mesen emulator and need the whole core
+ZXSRC := $(filter-out Core/ZX/ZxConsole.cpp Core/ZX/ZxControlManager.cpp Core/ZX/Debugger/%,$(shell find Core/ZX -name '*.cpp'))
 ZXOBJ := $(ZXSRC:Core/%.cpp=ZxTests/obj/%.o)
 
 ZxTests/obj/%.o: Core/%.cpp

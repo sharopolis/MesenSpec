@@ -12,6 +12,7 @@
 	#include "Utilities/ISerializable.h"
 
 class IZxBus;
+class IZxDebugHooks;
 class ZxCpuParityTable;
 
 class ZxCpu final : public ISerializable
@@ -40,6 +41,7 @@ private:
 	};
 
 	IZxBus* _bus = nullptr;
+	IZxDebugHooks* _hooks = nullptr;
 
 	int32_t _cbAddress = -1;
 	ZxCpuState _state = {};
@@ -238,9 +240,12 @@ private:
 
 	void ProcessNmi();
 	void ProcessIrq();
+	void EndHalt();
 
 public:
 	void Init(IZxBus* bus);
+	void SetDebugHooks(IZxDebugHooks* hooks) { _hooks = hooks; }
+	IZxDebugHooks* GetDebugHooks() { return _hooks; }
 	void Reset();
 
 	ZxCpuState& GetState();

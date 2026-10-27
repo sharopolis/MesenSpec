@@ -125,6 +125,13 @@
     <ClInclude Include="SMS\SmsNtscFilter.h" />
     <ClInclude Include="SMS\SmsPsg.h" />
     <ClInclude Include="SMS\SmsTypes.h" />
+    <ClInclude Include="ZX\IZxDebugHooks.h" />
+    <ClInclude Include="ZX\Debugger\DummyZxCpu.h" />
+    <ClInclude Include="ZX\Debugger\ZxDebugger.h" />
+    <ClInclude Include="ZX\Debugger\ZxPpuTools.h" />
+    <ClInclude Include="ZX\Debugger\ZxDisUtils.h" />
+    <ClInclude Include="ZX\Debugger\ZxEventManager.h" />
+    <ClInclude Include="ZX\Debugger\ZxTraceLogger.h" />
     <ClInclude Include="ZX\IZxBus.h" />
     <ClInclude Include="ZX\Input\ZxKeyboardDevice.h" />
     <ClInclude Include="ZX\ZxBeeper.h" />
@@ -977,6 +984,13 @@
     <ClCompile Include="SMS\SmsConsole.cpp" />
     <ClCompile Include="SMS\SmsControlManager.cpp" />
     <ClCompile Include="SMS\SmsCpu.cpp" />
+    <ClCompile Include="ZX\Debugger\DummyZxCpu.cpp" />
+    <ClCompile Include="ZX\Debugger\ZxDebugger.cpp" />
+    <ClCompile Include="ZX\Debugger\ZxPpuTools.cpp" />
+    <ClCompile Include="ZX\Debugger\ZxDisUtils.cpp" />
+    <ClCompile Include="ZX\Debugger\ZxEventManager.cpp" />
+    <ClCompile Include="ZX\Debugger\ZxTraceLogger.cpp" />
+    <ClCompile Include="Debugger\ExpressionEvaluator.Zx.cpp" />
     <ClCompile Include="ZX\ZxConsole.cpp" />
     <ClCompile Include="ZX\ZxControlManager.cpp" />
     <ClCompile Include="ZX\ZxCpu.cpp" />

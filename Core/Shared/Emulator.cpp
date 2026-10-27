@@ -1134,11 +1134,6 @@ void Emulator::ResetDebugger(bool startDebugger)
 
 void Emulator::InitDebugger()
 {
-	if(_consoleType == ConsoleType::Zx) {
-		//TODOZX debugger: the ZX Spectrum has no debugger yet - debugger API calls get no debugger and return defaults
-		return;
-	}
-
 	if(!_debugger) {
 		//Lock to make sure we don't try to start debuggers in 2 separate threads at once
 		auto lock = _debuggerLock.AcquireSafe();

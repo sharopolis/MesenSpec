@@ -69,9 +69,32 @@ public:
 	//Called by the machine when the frame ends (after the last instruction that started in it)
 	void EndFrame();
 
+	//Position of the beam at the given cycle, for the debugger
+	ZxUlaState GetState(uint64_t cycle)
+	{
+		ZxUlaState state = {};
+		uint32_t frameCycle = (uint32_t)(cycle - _frameStartCycle);
+		state.FrameCount = _frameCount;
+		if(frameCycle >= _timing.FrameLength) {
+			//The last instruction of the frame ended in the next one
+			frameCycle -= _timing.FrameLength;
+			state.FrameCount++;
+		}
+		state.FrameCycle = frameCycle;
+		state.Scanline = (uint16_t)(frameCycle / _timing.LineLength);
+		state.Cycle = (uint16_t)(frameCycle % _timing.LineLength);
+		state.BorderColor = _borderColor;
+		return state;
+	}
+
+	uint16_t GetScanlineCount() { return (uint16_t)(_timing.FrameLength / _timing.LineLength); }
+
 	uint64_t GetFrameStartCycle() { return _frameStartCycle; }
 	uint32_t GetFrameCount() { return _frameCount; }
 	const ZxTiming& GetTiming() { return _timing; }
+
+	//Number of pixels of the frame buffer drawn so far in this frame (row by row, from the top left)
+	uint32_t GetDrawnPixelCount() { return _nextChunk * 8; }
 
 	//Palette indexes: 0-7 normal, 8-15 bright
 	uint16_t* GetFrameBuffer() { return _frameBuffer; }

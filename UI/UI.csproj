@@ -189,6 +189,9 @@
     <Compile Update="Debugger\StatusViews\SmsStatusView.axaml.cs">
       <DependentUpon>SmsStatusView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Debugger\StatusViews\ZxStatusView.axaml.cs">
+      <DependentUpon>ZxStatusView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Debugger\Views\ControllerListView.axaml.cs">
       <DependentUpon>ControllerListView.axaml</DependentUpon>
     </Compile>
@@ -263,6 +266,9 @@
     </Compile>
     <Compile Update="Debugger\Views\SmsEventViewerConfigView.axaml.cs">
       <DependentUpon>SmsEventViewerConfigView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Debugger\Views\ZxEventViewerConfigView.axaml.cs">
+      <DependentUpon>ZxEventViewerConfigView.axaml</DependentUpon>
     </Compile>
     <Compile Update="Debugger\Views\RegisterTabView.axaml.cs">
       <DependentUpon>RegisterTabView.axaml</DependentUpon>

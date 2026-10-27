@@ -72,6 +72,8 @@ namespace Mesen.Debugger.ViewModels
 				ConsoleType.Sms => 192,
 				ConsoleType.Gba => 160,
 				ConsoleType.Ws => 144,
+				//Start of the frame, after the picture is complete
+				ConsoleType.Zx => 0,
 				_ => throw new Exception("Invalid console type")
 			};
 

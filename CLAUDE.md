@@ -42,10 +42,12 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
 - 48K: boots, BASIC works, keyboard, beeper, border, floating bus, contention (memory + I/O), snapshots, TAP loading.
 - Mesen integration stage 1: .sna/.z80/.tap load and run through the real Mesen core and test runner (checked with
   screenshots via MesenCore.so); GUI keyboard/sound/picture still need hands-on testing.
-  The debugger is not implemented: `Emulator::InitDebugger` returns without creating one for Zx and the Debug menu is
-  disabled (`IsDebuggerAvailable` in MainMenuViewModel) - both marked TODOZX.
-- Next: stage 2 debugger (ZxDebugger/DisUtils/TraceLogger/EventManager/DummyZxCpu based on Core/SMS/Debugger, UI
-  register viewer/status), a settings tab for key mapping/volume, then 128K/+2/+3, real-time tape (TZX), AY, Kempston.
+- Stage 2 debugger (uncommitted, builds, smoke-tested headless via `Mesen --testRunner script.lua game.tap` - Lua
+  stops with `emu.stop(code)`): Core/ZX/Debugger (ZxDebugger, ZxDisUtils, ZxTraceLogger, ZxEventManager, ZxPpuTools,
+  DummyZxCpu), IZxDebugHooks (ZxConsole forwards CPU activity to Mesen; the tape trap reports LD-BYTES as an
+  instruction first), UI: ZxStatusView, ZxRegisterViewer (ULA/port $FE, keyboard), ZxEventViewerConfig. Tile/sprite/
+  palette/tilemap viewers are hidden for Zx (HasPpuViewers). Still needs hands-on GUI testing.
+- Next: GUI-test the debugger, a settings tab for key mapping/volume, then 128K/+2/+3, real-time tape (TZX), AY, Kempston.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

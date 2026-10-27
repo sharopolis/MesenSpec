@@ -91,9 +91,37 @@ struct ZxCpuState : public BaseState
 	bool Iff2Read;
 };
 
-struct ZxState : public BaseState
+//ULA state as seen by the debugger (scanline/cycle are computed from the CPU's cycle count)
+struct ZxUlaState : public BaseState
+{
+	uint32_t FrameCount;
+	//T-state within the frame (0 = start of the /INT pulse)
+	uint32_t FrameCycle;
+	//FrameCycle / line length - the paper area starts at line 64 on the 48K
+	uint16_t Scanline;
+	//FrameCycle % line length - the paper of each line starts at cycle 0
+	uint16_t Cycle;
+	uint8_t BorderColor;
+};
+
+//Port 0xFE and the keyboard, as seen by the debugger
+struct ZxIoState : public BaseState
+{
+	//Last value written to port 0xFE (bits 0-2: border, bit 3: MIC, bit 4: EAR/speaker)
+	uint8_t PortFe;
+	//Level of the EAR input (tape signal)
+	bool EarInput;
+	//Keyboard matrix, one half-row per entry (bits 0-4, 0 = pressed), selected by address lines A8-A15
+	uint8_t KeyboardRows[8];
+};
+
+//Not derived from BaseState (like SmsState etc.): Cpu, which is, could then not be at offset 0, and the layout would
+//no longer match the UI's ZxState
+struct ZxState
 {
 	ZxCpuState Cpu;
+	ZxUlaState Ula;
+	ZxIoState Io;
 };
 
 namespace ZxCpuFlags

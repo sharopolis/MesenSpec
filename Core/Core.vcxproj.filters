@@ -2601,6 +2601,27 @@
     <ClInclude Include="SMS\SmsVdp.h">
       <Filter>SMS</Filter>
     </ClInclude>
+    <ClInclude Include="ZX\IZxDebugHooks.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\DummyZxCpu.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\ZxPpuTools.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\ZxDebugger.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\ZxDisUtils.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\ZxEventManager.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ZX\Debugger\ZxTraceLogger.h">
+      <Filter>ZX\Debugger</Filter>
+    </ClInclude>
     <ClInclude Include="ZX\IZxBus.h">
       <Filter>ZX</Filter>
     </ClInclude>
@@ -3182,6 +3203,27 @@
     <ClCompile Include="SMS\SmsConsole.cpp">
       <Filter>SMS</Filter>
     </ClCompile>
+    <ClCompile Include="ZX\Debugger\DummyZxCpu.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\Debugger\ZxPpuTools.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\Debugger\ZxDebugger.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\Debugger\ZxDisUtils.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\Debugger\ZxEventManager.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\Debugger\ZxTraceLogger.cpp">
+      <Filter>ZX\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="Debugger\ExpressionEvaluator.Zx.cpp">
+      <Filter>Debugger</Filter>
+    </ClCompile>
     <ClCompile Include="ZX\ZxConsole.cpp">
       <Filter>ZX</Filter>
     </ClCompile>
@@ -3552,6 +3594,9 @@
     </Filter>
     <Filter Include="ZX">
       <UniqueIdentifier>{7eee7a4d-d9c9-4549-b32e-1b8b9fddc391}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZX\Debugger">
+      <UniqueIdentifier>{b3d6c1f2-5a8e-4c7d-9e21-6f0a4d8b2c93}</UniqueIdentifier>
     </Filter>
     <Filter Include="ZX\Input">
       <UniqueIdentifier>{4edee02a-055d-4f60-b179-4d22db0579d7}</UniqueIdentifier>

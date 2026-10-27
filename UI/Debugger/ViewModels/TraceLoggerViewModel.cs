@@ -593,6 +593,7 @@ namespace Mesen.Debugger.ViewModels
 					break;
 
 				case CpuType.Sms:
+				case CpuType.Zx:
 					addTag(cfg.ShowRegisters, "A:[A,2h] B:[B,2h] C:[C,2h] D:[D,2h] E:[E,2h] ");
 					addTag(cfg.ShowStatusFlags, cfg.StatusFormat switch {
 						StatusFlagFormat.Hexadecimal => "F:[PS,h] ",
@@ -671,7 +672,7 @@ namespace Mesen.Debugger.ViewModels
 				CpuType.Gameboy => new string[] { "A", "B", "C", "D", "E", "F", "H", "L", "PS", "SP" },
 				CpuType.Nes => new string[] { "A", "X", "Y", "P", "SP" },
 				CpuType.Pce => new string[] { "A", "X", "Y", "P", "SP" },
-				CpuType.Sms => new string[] { "A", "B", "C", "D", "E", "F", "H", "L", "IX", "IY", "A'", "B'", "C'", "D'", "E'", "F'", "H'", "L'", "I", "R", "PS", "SP" },
+				CpuType.Sms or CpuType.Zx => new string[] { "A", "B", "C", "D", "E", "F", "H", "L", "IX", "IY", "A'", "B'", "C'", "D'", "E'", "F'", "H'", "L'", "I", "R", "PS", "SP" },
 				CpuType.Gba or CpuType.St018 => new string[] { "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "CPSR" },
 				CpuType.Ws => new string[] { "AX", "BX", "CX", "DX", "CS", "IP", "SS", "SP", "BP", "DS", "ES", "SI", "DI", "F" },
 				_ => throw new Exception("unsupported cpu type")

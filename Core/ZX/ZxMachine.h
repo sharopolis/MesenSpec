@@ -38,6 +38,9 @@ public:
 
 	void Reset();
 
+	//Lets the Mesen debugger see what the CPU does (nullptr to disable)
+	void SetDebugHooks(IZxDebugHooks* hooks) { _cpu.SetDebugHooks(hooks); }
+
 	//Runs the CPU until the end of the current frame (the last instruction may end in the next frame)
 	void RunFrame();
 

@@ -122,6 +122,7 @@ namespace Mesen.Interop
 				CpuType.Sms => GetPpuState<SmsVdpState>(cpuType),
 				CpuType.Gba => GetPpuState<GbaPpuState>(cpuType),
 				CpuType.Ws => GetPpuState<WsPpuState>(cpuType),
+				CpuType.Zx => GetPpuState<ZxUlaState>(cpuType),
 				_ => throw new Exception("Unsupported cpu type")
 			};
 		}
@@ -144,6 +145,7 @@ namespace Mesen.Interop
 				CpuType.Sms => GetPpuToolsState<EmptyPpuToolsState>(cpuType),
 				CpuType.Gba => GetPpuToolsState<EmptyPpuToolsState>(cpuType),
 				CpuType.Ws => GetPpuToolsState<EmptyPpuToolsState>(cpuType),
+				CpuType.Zx => GetPpuToolsState<EmptyPpuToolsState>(cpuType),
 				_ => throw new Exception("Unsupported cpu type")
 			};
 		}
@@ -410,6 +412,7 @@ namespace Mesen.Interop
 		[DllImport(DllPath)] public static extern void SetEventViewerConfig(CpuType cpuType, InteropPceEventViewerConfig config);
 		[DllImport(DllPath)] public static extern void SetEventViewerConfig(CpuType cpuType, InteropSmsEventViewerConfig config);
 		[DllImport(DllPath)] public static extern void SetEventViewerConfig(CpuType cpuType, InteropWsEventViewerConfig config);
+		[DllImport(DllPath)] public static extern void SetEventViewerConfig(CpuType cpuType, InteropZxEventViewerConfig config);
 
 		[DllImport(DllPath, EntryPoint = "GetEventViewerEvent")] private static extern DebugEventInfo GetEventViewerEventWrapper(CpuType cpuType, UInt16 scanline, UInt16 cycle);
 		public static DebugEventInfo? GetEventViewerEvent(CpuType cpuType, UInt16 scanline, UInt16 cycle)
@@ -557,6 +560,7 @@ namespace Mesen.Interop
 				CpuType.Sms => state is SmsCpuState,
 				CpuType.Gba => state is GbaCpuState,
 				CpuType.Ws => state is WsCpuState,
+				CpuType.Zx => state is ZxCpuState,
 				_ => false
 			};
 		}
@@ -571,6 +575,7 @@ namespace Mesen.Interop
 				ConsoleType.Sms => state is SmsVdpState,
 				ConsoleType.Gba => state is GbaPpuState,
 				ConsoleType.Ws => state is WsPpuState,
+				ConsoleType.Zx => state is ZxUlaState,
 				_ => false
 			};
 		}
@@ -1016,6 +1021,25 @@ namespace Mesen.Interop
 
 		public InteropEventViewerCategoryCfg GameGearPortWrite;
 		public InteropEventViewerCategoryCfg GameGearPortRead;
+
+		[MarshalAs(UnmanagedType.I1)] public bool ShowPreviousFrameEvents;
+	}
+
+	//Same layout as ZxEventViewerConfig in Core/ZX/Debugger/ZxEventManager.h
+	[StructLayout(LayoutKind.Sequential)]
+	public class InteropZxEventViewerConfig
+	{
+		public InteropEventViewerCategoryCfg Irq;
+		public InteropEventViewerCategoryCfg Nmi;
+		public InteropEventViewerCategoryCfg MarkedBreakpoints;
+
+		public InteropEventViewerCategoryCfg UlaPortWrite;
+		public InteropEventViewerCategoryCfg UlaPortRead;
+
+		public InteropEventViewerCategoryCfg OtherPortWrite;
+		public InteropEventViewerCategoryCfg OtherPortRead;
+
+		public InteropEventViewerCategoryCfg ScreenWrite;
 
 		[MarshalAs(UnmanagedType.I1)] public bool ShowPreviousFrameEvents;
 	}

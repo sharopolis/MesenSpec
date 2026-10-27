@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ZX/ZxMachine.h"
 #include "ZX/ZxSnapshot.h"
+#include "ZX/IZxDebugHooks.h"
 #include "Utilities/Serializer.h"
 
 ZxMachine::ZxMachine()
@@ -47,6 +48,10 @@ void ZxMachine::RunFrame()
 	bool tapeLoaded = _tape.IsLoaded();
 	while(_cpu.GetCycleCount() < frameEnd) {
 		if(tapeLoaded && _cpu.GetState().PC == ZxTape::LdBytesAddress) {
+			//The trap replaces the instruction at LD-BYTES, so let the debugger see it (e.g. for breakpoints) first
+			if(IZxDebugHooks* hooks = _cpu.GetDebugHooks()) {
+				hooks->ProcessInstruction();
+			}
 			_tape.ProcessLoadTrap(_cpu, _memoryManager);
 		}
 		_cpu.Exec();

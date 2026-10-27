@@ -63,6 +63,15 @@ uint8_t ZxMemoryManager::Peek(uint16_t addr)
 	return addr < 0x4000 ? _rom[addr] : _ram[addr - 0x4000];
 }
 
+uint8_t ZxMemoryManager::PeekPort(uint16_t port)
+{
+	if(!(port & 0x01)) {
+		bool ear = _earInput || (_portFe & 0x10);
+		return 0xA0 | (ear ? 0x40 : 0) | _keyboard->Read(port >> 8);
+	}
+	return 0xFF;
+}
+
 uint8_t ZxMemoryManager::ContendPortPre(uint16_t port, uint64_t cycle)
 {
 	//The high byte of the port is on the address bus - it is contended like a memory address would be
@@ -93,8 +102,7 @@ uint8_t ZxMemoryManager::ReadPort(uint16_t port, uint64_t cycle)
 	if(!(port & 0x01)) {
 		//Bits 0-4: keyboard, bit 6: EAR input, bits 5 and 7 are always set.
 		//On an Issue 3 board with no tape signal, bit 6 follows the EAR output bit
-		bool ear = _earInput || (_portFe & 0x10);
-		return 0xA0 | (ear ? 0x40 : 0) | _keyboard->Read(port >> 8);
+		return PeekPort(port);
 	}
 
 	return _ula->GetFloatingBusValue(cycle);

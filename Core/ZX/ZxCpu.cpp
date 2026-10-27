@@ -2,6 +2,8 @@
 #include "ZX/ZxCpu.h"
 #include "ZX/ZxTypes.h"
 #include "ZX/IZxBus.h"
+#include "ZX/IZxDebugHooks.h"
+#include "Shared/EventType.h"
 #include "Shared/MemoryOperationType.h"
 #include "Utilities/HexUtilities.h"
 #include "Utilities/Serializer.h"
@@ -33,7 +35,16 @@ void ZxCpu::Exec()
 	_state.FlagsChanged <<= 1;
 	_state.Iff2Read = false;
 
-	//TODOZX debugger hooks: ProcessInstruction / ProcessHaltedCpu once CpuType::Zx exists
+#ifndef DUMMYCPU
+	if(_hooks) {
+		if(_state.Halted) {
+			_hooks->ProcessHaltedCpu();
+		} else {
+			_hooks->ProcessInstruction();
+		}
+	}
+#endif
+
 	opCode = ReadOpCode();
 	if(_state.Halted) {
 		//HALT executes NOPs, re-fetching the HALT opcode (PC was moved back onto it)
@@ -42,20 +53,33 @@ void ZxCpu::Exec()
 		ExecOpCode<0>(opCode);
 	}
 
+#ifndef DUMMYCPU
 	if(_state.NmiPending) {
 		ProcessNmi();
 	} else if(_state.IFF1 && opCode != 0xFB && _bus->IsIrqActive(_state.CycleCount)) {
 		//Process IRQs if enabled, but not if the previous op was EI (0xFB)
 		ProcessIrq();
 	}
+#endif
+}
+
+void ZxCpu::EndHalt()
+{
+	_state.Halted = false;
+	_state.PC++;
+#ifndef DUMMYCPU
+	if(_hooks) {
+		_hooks->ProcessEvent(EventType::HaltEnded);
+	}
+#endif
 }
 
 void ZxCpu::ProcessNmi()
 {
 	if(_state.Halted) {
-		_state.Halted = false;
-		_state.PC++;
+		EndHalt();
 	}
+	[[maybe_unused]] uint16_t originalPc = _state.PC;
 	_state.NmiPending = false;
 	_state.IFF1 = false;
 	IncrementR();
@@ -63,7 +87,11 @@ void ZxCpu::ProcessNmi()
 	PushWord(_state.PC);
 	_state.PC = 0x66;
 	_state.WZ = _state.PC;
-	//TODOZX _emu->ProcessInterrupt<CpuType::Zx>(originalPc, _state.PC, true);
+#ifndef DUMMYCPU
+	if(_hooks) {
+		_hooks->ProcessInterrupt(originalPc, _state.PC, true);
+	}
+#endif
 }
 
 void ZxCpu::ProcessIrq()
@@ -74,9 +102,9 @@ void ZxCpu::ProcessIrq()
 	}
 
 	if(_state.Halted) {
-		_state.Halted = false;
-		_state.PC++;
+		EndHalt();
 	}
+	[[maybe_unused]] uint16_t originalPc = _state.PC;
 	_state.IFF1 = false;
 	_state.IFF2 = false;
 	IncrementR();
@@ -95,7 +123,11 @@ void ZxCpu::ProcessIrq()
 	}
 	_state.WZ = _state.PC;
 	_state.FlagsChanged &= ~0x01;
-	//TODOZX _emu->ProcessInterrupt<CpuType::Zx>(originalPc, _state.PC, false);
+#ifndef DUMMYCPU
+	if(_hooks) {
+		_hooks->ProcessInterrupt(originalPc, _state.PC, false);
+	}
+#endif
 }
 
 template<uint8_t prefix>
@@ -868,9 +900,16 @@ uint16_t ZxCpu::ReadCodeWord()
 
 void ZxCpu::SkipCode()
 {
-	//Operand read whose value is never used (e.g. the offset of a JR that isn't taken) - only its timing matters
+	//Operand read whose value is never used (e.g. the offset of a JR that isn't taken)
 	Contend(_state.PC, true);
 	Tick(3);
+#ifndef DUMMYCPU
+	if(_hooks) {
+		//The byte is still read by the CPU, so the debugger sees it (breakpoints, code/data logging)
+		uint8_t value = _bus->Peek(_state.PC);
+		_hooks->ProcessMemoryRead(_state.PC, value, MemoryOperationType::ExecOperand);
+	}
+#endif
 	_state.PC++;
 }
 
@@ -889,7 +928,12 @@ uint8_t ZxCpu::ReadMemory(uint16_t addr)
 	LogMemoryOperation(addr, value, type, MemoryType::ZxMemory);
 	return value;
 #else
-	return _bus->Read(addr, _state.CycleCount, type);
+	uint8_t value = _bus->Read(addr, _state.CycleCount, type);
+	if(_hooks && !(type == MemoryOperationType::ExecOpCode && _state.Halted)) {
+		//The re-fetches of the HALT opcode while halted aren't reported (ProcessHaltedCpu is called instead)
+		_hooks->ProcessMemoryRead(addr, value, type);
+	}
+	return value;
 #endif
 }
 
@@ -901,7 +945,9 @@ void ZxCpu::Write(uint16_t addr, uint8_t value)
 #ifdef DUMMYCPU
 	LogMemoryOperation(addr, value, MemoryOperationType::Write, MemoryType::ZxMemory);
 #else
-	_bus->Write(addr, value, _state.CycleCount);
+	if(!_hooks || _hooks->ProcessMemoryWrite(addr, value)) {
+		_bus->Write(addr, value, _state.CycleCount);
+	}
 #endif
 }
 
@@ -914,6 +960,9 @@ uint8_t ZxCpu::ReadPort(uint16_t port)
 #else
 	Tick(_bus->ContendPortPre(port, _state.CycleCount));
 	uint8_t value = _bus->ReadPort(port, _state.CycleCount);
+	if(_hooks) {
+		_hooks->ProcessPortRead(port, value);
+	}
 	Tick(_bus->ContendPortPost(port, _state.CycleCount));
 	return value;
 #endif
@@ -926,6 +975,9 @@ void ZxCpu::WritePort(uint16_t port, uint8_t value)
 	LogMemoryOperation(port, value, MemoryOperationType::Write, MemoryType::ZxPort);
 #else
 	Tick(_bus->ContendPortPre(port, _state.CycleCount));
+	if(_hooks) {
+		_hooks->ProcessPortWrite(port, value);
+	}
 	_bus->WritePort(port, value, _state.CycleCount);
 	Tick(_bus->ContendPortPost(port, _state.CycleCount));
 #endif
@@ -1295,7 +1347,11 @@ void ZxCpu::HALT()
 	//PC stays on the HALT opcode, which keeps being re-fetched until an interrupt occurs
 	_state.Halted = true;
 	_state.PC--;
-	//TODOZX _emu->ProcessEvent(EventType::HaltStarted, CpuType::Zx);
+#ifndef DUMMYCPU
+	if(_hooks) {
+		_hooks->ProcessEvent(EventType::HaltStarted);
+	}
+#endif
 }
 
 void ZxCpu::CPL()

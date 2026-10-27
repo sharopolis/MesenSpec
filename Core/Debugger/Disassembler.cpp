@@ -22,6 +22,7 @@
 #include "SMS/SmsTypes.h"
 #include "WS/WsTypes.h"
 #include "WS/Debugger/WsDisUtils.h"
+#include "ZX/ZxTypes.h"
 #include "Shared/EmuSettings.h"
 #include "Utilities/FastString.h"
 #include "Utilities/HexUtilities.h"
@@ -581,6 +582,25 @@ void Disassembler::GetLineData(DisassemblyResult& row, CpuType type, MemoryType 
 					state.Pipeline.Execute.Address = (uint32_t)row.CpuAddress;
 					state.R[15] = state.Pipeline.Execute.Address + (data.OpSize * 2);
 
+					data.EffectiveAddress = disInfo.GetEffectiveAddress(_debugger, &state, lineCpuType);
+					if(showMemoryValues && data.EffectiveAddress.ValueSize >= 0) {
+						data.Value = disInfo.GetMemoryValue(data.EffectiveAddress, _memoryDumper, memType);
+					}
+					break;
+				}
+
+				case CpuType::Zx: {
+					ZxCpuState state = (ZxCpuState&)_debugger->GetCpuStateRef(lineCpuType);
+					state.PC = (uint16_t)row.CpuAddress;
+
+					CodeDataLogger* cdl = cdlManager->GetCodeDataLogger(row.Address.Type);
+					if(!disInfo.IsInitialized()) {
+						disInfo = DisassemblyInfo(row.Address.Address, 0, CpuType::Zx, row.Address.Type, _memoryDumper);
+					} else {
+						data.Flags |= (!cdl || cdl->IsCode(data.AbsoluteAddress.Address)) ? LineFlags::VerifiedCode : LineFlags::UnexecutedCode;
+					}
+
+					data.OpSize = disInfo.GetOpSize();
 					data.EffectiveAddress = disInfo.GetEffectiveAddress(_debugger, &state, lineCpuType);
 					if(showMemoryValues && data.EffectiveAddress.ValueSize >= 0) {
 						data.Value = disInfo.GetMemoryValue(data.EffectiveAddress, _memoryDumper, memType);

@@ -39,6 +39,8 @@ public:
 	uint8_t* GetVideoRam() { return _ram; }
 
 	void SetEarInput(bool level) { _earInput = level; }
+	bool GetEarInput() { return _earInput; }
+	uint8_t GetPortFe() { return _portFe; }
 
 	//Writes from loaders (snapshots, tape traps) - bypass timing, but keep the picture up to date
 	void DirectWrite(uint16_t addr, uint8_t value);
@@ -47,6 +49,9 @@ public:
 	uint8_t Read(uint16_t addr, uint64_t cycle, MemoryOperationType type) override;
 	void Write(uint16_t addr, uint8_t value, uint64_t cycle) override;
 	uint8_t Peek(uint16_t addr) override;
+
+	//Side-effect free port read, for the debugger's memory viewer (unattached ports read 0xFF)
+	uint8_t PeekPort(uint16_t port);
 
 	uint8_t ContendPortPre(uint16_t port, uint64_t cycle) override;
 	uint8_t ContendPortPost(uint16_t port, uint64_t cycle) override;

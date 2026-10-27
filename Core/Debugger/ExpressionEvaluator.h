@@ -202,6 +202,10 @@ enum EvalValues : int64_t
 	RegBP,
 	RegIP,
 
+	ZxBorderColor,
+	ZxFrameCycle,
+	ZxHalted,
+
 	FirstLabelIndex,
 };
 
@@ -288,6 +292,9 @@ private:
 
 	unordered_map<string, int64_t>& GetWsTokens();
 	int64_t GetWsTokenValue(int64_t token, EvalResultType& resultType);
+
+	unordered_map<string, int64_t>& GetZxTokens();
+	int64_t GetZxTokenValue(int64_t token, EvalResultType& resultType);
 
 	bool ReturnBool(int64_t value, EvalResultType& resultType);
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Debugger/IAssembler.h"
+#include "Shared/CpuType.h"
 
 class LabelManager;
 enum class HlRegType;
@@ -38,6 +39,7 @@ class SmsAssembler : public IAssembler
 private:
 	unordered_map<string, vector<OpCodeEntry>> _opCodes;
 	LabelManager* _labelManager;
+	CpuType _cpuType;
 
 	void InitParamEntry(ParamEntry& entry, string param, HlRegType hlRegType);
 	bool IsRegisterName(string op);
@@ -52,7 +54,8 @@ private:
 	void RunPass(vector<int16_t>& output, string code, uint32_t address, int16_t* assembledCode, bool firstPass, unordered_map<string, uint16_t>& localLabels);
 
 public:
-	SmsAssembler(LabelManager* labelManager);
+	//Also used for the ZX Spectrum (same Z80 instruction set), cpuType is used to look up labels
+	SmsAssembler(LabelManager* labelManager, CpuType cpuType = CpuType::Sms);
 	virtual ~SmsAssembler();
 
 	uint32_t AssembleCode(string code, uint32_t startAddress, int16_t* assembledCode);

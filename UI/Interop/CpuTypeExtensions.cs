@@ -212,6 +212,7 @@ namespace Mesen.Interop
 				case CpuType.Nes:
 				case CpuType.Pce:
 				case CpuType.Sms:
+				case CpuType.Zx:
 					return true;
 
 				default:
@@ -228,6 +229,7 @@ namespace Mesen.Interop
 				case CpuType.Nes:
 				case CpuType.Pce:
 				case CpuType.Sms:
+				case CpuType.Zx:
 				case CpuType.Gba:
 				case CpuType.Ws:
 					return true;

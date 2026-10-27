@@ -22,6 +22,8 @@ public:
 		{ "SPACE", "SYMBOL", "M", "N", "B" },
 	};
 
+	uint8_t GetRow(int row) { return _rows[row]; }
+
 	void SetKeyState(uint8_t row, uint8_t key, bool pressed)
 	{
 		if(pressed) {

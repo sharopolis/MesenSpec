@@ -72,6 +72,7 @@ unordered_map<string, int64_t>* ExpressionEvaluator::GetAvailableTokens()
 		case CpuType::Sms: return &GetSmsTokens();
 		case CpuType::Gba: return &GetGbaTokens();
 		case CpuType::Ws: return &GetWsTokens();
+		case CpuType::Zx: return &GetZxTokens();
 	}
 
 	return nullptr;
@@ -428,6 +429,7 @@ int64_t ExpressionEvaluator::Evaluate(ExpressionData& data, EvalResultType& resu
 								case CpuType::Sms: token = GetSmsTokenValue(token, resultType); break;
 								case CpuType::Gba: token = GetGbaTokenValue(token, resultType); break;
 								case CpuType::Ws: token = GetWsTokenValue(token, resultType); break;
+								case CpuType::Zx: token = GetZxTokenValue(token, resultType); break;
 							}
 						}
 						break;

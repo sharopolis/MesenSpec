@@ -8,9 +8,10 @@
 
 static const std::regex labelRegex = std::regex("^\\s*([@_a-zA-Z][@_a-zA-Z0-9+]*)", std::regex_constants::icase);
 
-SmsAssembler::SmsAssembler(LabelManager* labelManager)
+SmsAssembler::SmsAssembler(LabelManager* labelManager, CpuType cpuType)
 {
 	_labelManager = labelManager;
+	_cpuType = cpuType;
 	InitAssembler();
 }
 
@@ -212,7 +213,7 @@ int SmsAssembler::ReadValue(string operand, int min, int max, unordered_map<stri
 					} else if(localLabels.find(operand) != localLabels.end()) {
 						value = localLabels.find(operand)->second;
 					} else {
-						int labelAddress = _labelManager->GetLabelRelativeAddress(operand, CpuType::Sms);
+						int labelAddress = _labelManager->GetLabelRelativeAddress(operand, _cpuType);
 						if(labelAddress >= 0) {
 							//Matching label found
 							value = labelAddress;

@@ -3,12 +3,13 @@
 #include "Shared/Interfaces/IConsole.h"
 #include "Shared/SettingTypes.h"
 #include "ZX/ZxTypes.h"
+#include "ZX/IZxDebugHooks.h"
 
 class Emulator;
 class ZxMachine;
 class ZxControlManager;
 
-class ZxConsole final : public IConsole
+class ZxConsole final : public IConsole, public IZxDebugHooks
 {
 private:
 	Emulator* _emu = nullptr;
@@ -32,6 +33,7 @@ private:
 
 	void ScheduleTapeAutoLoad();
 	void ApplyAutoKeys();
+	void SendFrame(uint16_t* frameBuffer);
 
 public:
 	static vector<string> GetSupportedExtensions() { return { ".sna", ".z80", ".tap" }; }
@@ -71,6 +73,19 @@ public:
 
 	ZxState GetState();
 	void GetConsoleState(BaseState& state, ConsoleType consoleType) override;
+
+	//Shows the picture drawn so far (when the debugger breaks mid-frame)
+	void DebugSendFrame();
+
+	//IZxDebugHooks - forwards the machine's activity to Mesen's debugger
+	void ProcessInstruction() override;
+	void ProcessHaltedCpu() override;
+	void ProcessInterrupt(uint16_t originalPc, uint16_t currentPc, bool forNmi) override;
+	void ProcessMemoryRead(uint16_t addr, uint8_t& value, MemoryOperationType type) override;
+	bool ProcessMemoryWrite(uint16_t addr, uint8_t& value) override;
+	void ProcessPortRead(uint16_t port, uint8_t& value) override;
+	void ProcessPortWrite(uint16_t port, uint8_t& value) override;
+	void ProcessEvent(EventType type) override;
 
 	void Serialize(Serializer& s) override;
 };
