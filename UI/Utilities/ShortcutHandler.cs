@@ -98,6 +98,7 @@ namespace Mesen.Utilities
 				case EmulatorShortcut.LoadTape: LoadTape(); break;
 				case EmulatorShortcut.RecordTape: RecordTape(); break;
 				case EmulatorShortcut.StopRecordTape: EmuApi.ProcessTapeRecorderAction(TapeRecorderAction.StopRecord); break;
+				case EmulatorShortcut.ZxInsertTape: InsertZxTape(); break;
 
 				case EmulatorShortcut.LoadStateFromFile: LoadStateFromFile(); break;
 				case EmulatorShortcut.SaveStateToFile: SaveStateToFile(); break;
@@ -135,6 +136,21 @@ namespace Mesen.Utilities
 		{
 			string? filename = await FileDialogHelper.OpenFile(null, _mainWindow, FileDialogHelper.BinExt);
 			if(filename != null) {
+				EmuApi.ProcessTapeRecorderAction(TapeRecorderAction.Play, filename);
+			}
+		}
+
+		private async void InsertZxTape()
+		{
+			//Start in the current game's folder - the next tape/side is usually next to it
+			string? folder = null;
+			try {
+				folder = Path.GetDirectoryName(MainWindowModel.RomInfo.RomPath);
+			} catch { }
+
+			string? filename = await FileDialogHelper.OpenFile(folder != null && Directory.Exists(folder) ? folder : null, _mainWindow, FileDialogHelper.ZxTapeExt);
+			if(filename != null) {
+				//The ZX core takes the tape through the tape recorder interface
 				EmuApi.ProcessTapeRecorderAction(TapeRecorderAction.Play, filename);
 			}
 		}

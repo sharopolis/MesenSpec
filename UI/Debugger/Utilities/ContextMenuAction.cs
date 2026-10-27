@@ -693,6 +693,13 @@ namespace Mesen.Debugger.Utilities
 		[IconFile("MediaEject")]
 		EjectDisk,
 
+		[IconFile("Tape")]
+		InsertTape,
+		[IconFile("PrevTrack")]
+		RewindTape,
+		[IconFile("MediaEject")]
+		EjectTape,
+
 		[IconFile("Coins")]
 		InsertCoin1,
 		[IconFile("Coins")]

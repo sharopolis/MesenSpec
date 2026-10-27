@@ -1135,6 +1135,11 @@ enum class EmulatorShortcut
 	StartRecordHdPack,
 	StopRecordHdPack,
 
+	//ZX Spectrum
+	ZxInsertTape,
+	ZxRewindTape,
+	ZxEjectTape,
+
 	ShortcutCount,
 };
 

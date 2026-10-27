@@ -2025,6 +2025,10 @@ E
 			<Value ID="LoadTape">Load Tape From File</Value>
 			<Value ID="RecordTape">Start Recording Tape To File</Value>
 			<Value ID="StopRecordTape">Stop Recording Tape</Value>
+
+			<Value ID="ZxInsertTape">ZX - Insert Tape</Value>
+			<Value ID="ZxRewindTape">ZX - Rewind Tape</Value>
+			<Value ID="ZxEjectTape">ZX - Eject Tape</Value>
 		</Enum>
 		<Enum ID="ControllerType">
 			<Value ID="None">None</Value>
@@ -3790,6 +3794,9 @@ E
 			<Value ID="PowerOff">Power Off</Value>
 			<Value ID="SelectDisk">Select Disk</Value>
 			<Value ID="EjectDisk">Eject Disk</Value>
+			<Value ID="InsertTape">Insert Tape...</Value>
+			<Value ID="RewindTape">Rewind Tape</Value>
+			<Value ID="EjectTape">Eject Tape</Value>
 			
 			<Value ID="InsertCoin1">Insert Coin (1)</Value>
 			<Value ID="InsertCoin2">Insert Coin (2)</Value>

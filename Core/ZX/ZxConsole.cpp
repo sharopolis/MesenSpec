@@ -14,6 +14,8 @@
 #include "Shared/Audio/SoundMixer.h"
 #include "Shared/BaseControlManager.h"
 #include "Shared/EventType.h"
+#include "Shared/Movies/MovieManager.h"
+#include "Netplay/GameClient.h"
 #include "Utilities/VirtualFile.h"
 #include "Utilities/Serializer.h"
 
@@ -130,6 +132,9 @@ void ZxConsole::RunFrame()
 	ApplyAutoKeys();
 
 	_machine->RunFrame();
+	if(_machine->GetTape().TakeEndReached()) {
+		MessageManager::DisplayMessage("Tape", "ZxTapeEnd");
+	}
 
 	_emu->ProcessEvent(EventType::EndFrame, CpuType::Zx);
 	_emu->GetNotificationManager()->SendNotification(ConsoleNotificationType::PpuFrameDone);
@@ -295,6 +300,70 @@ AudioTrackInfo ZxConsole::GetAudioTrackInfo()
 
 void ZxConsole::ProcessAudioPlayerAction(AudioPlayerActionParams p)
 {
+}
+
+ShortcutState ZxConsole::IsShortcutAllowed(EmulatorShortcut shortcut, uint32_t shortcutParam)
+{
+	switch(shortcut) {
+		case EmulatorShortcut::ZxInsertTape:
+		case EmulatorShortcut::ZxRewindTape:
+		case EmulatorShortcut::ZxEjectTape: {
+			bool allowed = _emu->IsRunning() && !_emu->GetGameClient()->Connected() && !_emu->GetMovieManager()->Playing();
+			if(shortcut != EmulatorShortcut::ZxInsertTape) {
+				allowed = allowed && _machine->GetTape().IsLoaded();
+			}
+			return allowed ? ShortcutState::Enabled : ShortcutState::Disabled;
+		}
+
+		default:
+			return ShortcutState::Default;
+	}
+}
+
+void ZxConsole::ProcessNotification(ConsoleNotificationType type, void* parameter)
+{
+	if(type == ConsoleNotificationType::ExecuteShortcut) {
+		ExecuteShortcutParams* params = (ExecuteShortcutParams*)parameter;
+		switch(params->Shortcut) {
+			default: break;
+
+			case EmulatorShortcut::ZxRewindTape: {
+				auto lock = _emu->AcquireLock();
+				_machine->GetTape().Rewind();
+				MessageManager::DisplayMessage("Tape", "ZxTapeRewound");
+				break;
+			}
+
+			case EmulatorShortcut::ZxEjectTape: {
+				auto lock = _emu->AcquireLock();
+				_machine->GetTape().Eject();
+				MessageManager::DisplayMessage("Tape", "ZxTapeEjected");
+				break;
+			}
+		}
+	}
+}
+
+void ZxConsole::ProcessTapeRecorderAction(TapeRecorderAction action, string filename)
+{
+	if(action == TapeRecorderAction::Play) {
+		InsertTape(filename);
+	}
+}
+
+void ZxConsole::InsertTape(string filename)
+{
+	//Called with the emulation lock held. The game keeps running - type LOAD "" (or let the game ask for the tape).
+	VirtualFile file(filename);
+	vector<uint8_t> data;
+	string error;
+	if(!ZxTape::IsTape(file.GetFileExtension())) {
+		MessageManager::DisplayMessage("Error", "CouldNotLoadFile", file.GetFileName());
+	} else if(!file.ReadFile(data) || !_machine->LoadTape(data, error)) {
+		MessageManager::DisplayMessage("Error", error.empty() ? "CouldNotLoadFile" : error, file.GetFileName());
+	} else {
+		MessageManager::DisplayMessage("Tape", "ZxTapeInserted", file.GetFileName());
+	}
 }
 
 AddressInfo ZxConsole::GetAbsoluteAddress(AddressInfo& relAddress)

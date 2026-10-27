@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Shared/Interfaces/IConsole.h"
+#include "Shared/Interfaces/ITapeRecorder.h"
 #include "Shared/SettingTypes.h"
 #include "ZX/ZxTypes.h"
 #include "ZX/IZxDebugHooks.h"
@@ -9,7 +10,8 @@ class Emulator;
 class ZxMachine;
 class ZxControlManager;
 
-class ZxConsole final : public IConsole, public IZxDebugHooks
+//Tapes can be swapped while running: the UI inserts one through ITapeRecorder (Play), rewinds/ejects it with shortcuts
+class ZxConsole final : public IConsole, public IZxDebugHooks, public ITapeRecorder
 {
 private:
 	Emulator* _emu = nullptr;
@@ -34,6 +36,7 @@ private:
 	void ScheduleTapeAutoLoad();
 	void ApplyAutoKeys();
 	void SendFrame(uint16_t* frameBuffer);
+	void InsertTape(string filename);
 
 public:
 	static vector<string> GetSupportedExtensions() { return { ".sna", ".z80", ".tap" }; }
@@ -67,6 +70,13 @@ public:
 
 	AudioTrackInfo GetAudioTrackInfo() override;
 	void ProcessAudioPlayerAction(AudioPlayerActionParams p) override;
+
+	ShortcutState IsShortcutAllowed(EmulatorShortcut shortcut, uint32_t shortcutParam) override;
+	void ProcessNotification(ConsoleNotificationType type, void* parameter) override;
+
+	//ITapeRecorder - only playback (inserting a tape)
+	void ProcessTapeRecorderAction(TapeRecorderAction action, string filename) override;
+	bool IsRecording() override { return false; }
 
 	AddressInfo GetAbsoluteAddress(AddressInfo& relAddress) override;
 	AddressInfo GetRelativeAddress(AddressInfo& absAddress, CpuType cpuType) override;

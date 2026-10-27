@@ -191,6 +191,24 @@ static void TestTapeTrap(const vector<uint8_t>& rom)
 	CHECK(s.PC == 0x8100, "returned to the loader's address: PC=%04X", s.PC);
 	CHECK(mm.Peek(0x9000) == 0x11 && mm.Peek(0x9001) == 0x22 && mm.Peek(0x9002) == 0x33, "block loaded: %02X %02X %02X", mm.Peek(0x9000), mm.Peek(0x9001), mm.Peek(0x9002));
 	CHECK(zx->GetTape().GetNextBlock() == 1, "tape advanced");
+	CHECK(!zx->GetTape().TakeEndReached(), "end of tape not reported yet");
+
+	//Past the last block, the ROM waits for a signal (end of tape reported once), until the tape is rewound
+	s.PC = 0x8000;
+	s.SP = 0xF000;
+	mm.DirectWrite(0x9000, 0);
+	RunFrames(*zx, 2);
+	CHECK(s.PC < 0x4000, "waiting in the ROM at the end of the tape: PC=%04X", s.PC);
+	CHECK(zx->GetTape().TakeEndReached(), "end of tape reported");
+	RunFrames(*zx, 2);
+	CHECK(!zx->GetTape().TakeEndReached(), "end of tape reported only once");
+
+	zx->GetTape().Rewind();
+	RunFrames(*zx, 1);
+	CHECK(s.PC == 0x8100 && mm.Peek(0x9000) == 0x11, "block loaded again after a rewind: PC=%04X", s.PC);
+
+	zx->GetTape().Eject();
+	CHECK(!zx->GetTape().IsLoaded() && !zx->GetTape().TakeEndReached(), "tape ejected");
 }
 
 static void TestSnapshots(const vector<uint8_t>& rom)

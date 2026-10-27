@@ -66,8 +66,11 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
   same as Mesen's SMS).
 - 128K stage 2: AY (tone/noise/envelope, AY volume table, register read masks), AY volume slider, AY register viewer
   tab. Unit-tested (tone frequency, all envelope shapes, ports); 128 BASIC PLAY "a" measures 440 Hz.
-- Next: 128K snapshots (.sna/.z80), +2/+3, tape controls (rewind/insert - multi-load games ask for
-  rewinds), real-time tape (TZX), Kempston.
+- Tape controls: Game menu Insert Tape / Rewind Tape / Eject Tape (EmulatorShortcut ZxInsertTape/ZxRewindTape/
+  ZxEjectTape, handled by ZxConsole; the UI's file dialog inserts through ITapeRecorder Play, which Emulator falls back
+  to on the console itself). OSD "End of tape" when the ROM waits past the last block. The tape position is not in
+  save states.
+- Next: 128K snapshots (.sna/.z80), +2/+3, real-time tape (TZX), Kempston.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

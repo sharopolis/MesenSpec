@@ -141,6 +141,11 @@ namespace Mesen.Config.Shortcuts
 		StartRecordHdPack,
 		StopRecordHdPack,
 
+		//ZX Spectrum
+		ZxInsertTape,
+		ZxRewindTape,
+		ZxEjectTape,
+
 		LastValidValue,
 		[Obsolete] LoadRandomGame,
 	}

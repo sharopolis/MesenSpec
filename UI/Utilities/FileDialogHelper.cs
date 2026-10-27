@@ -37,6 +37,7 @@ namespace Mesen.Utilities
 		public const string MesenLabelExt = "mlb";
 		public const string NesAsmLabelExt = "fns";
 		public const string BinExt = "bin";
+		public const string ZxTapeExt = "tap";
 		public const string NesExt = "nes";
 		public const string SufamiTurboExt = "st";
 		public const string SpcExt = "spc";

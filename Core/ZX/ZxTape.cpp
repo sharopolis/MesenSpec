@@ -25,20 +25,21 @@ bool ZxTape::Load(const vector<uint8_t>& data, string& error)
 	}
 
 	_blocks = std::move(blocks);
-	_nextBlock = 0;
+	Rewind();
 	return true;
 }
 
 void ZxTape::Eject()
 {
 	_blocks.clear();
-	_nextBlock = 0;
+	Rewind();
 }
 
 bool ZxTape::ProcessLoadTrap(ZxCpu& cpu, ZxMemoryManager& memoryManager)
 {
 	if(_nextBlock >= _blocks.size()) {
 		//End of tape: let the ROM wait for a signal that never comes, like a real tape deck
+		_endReached = true;
 		return false;
 	}
 

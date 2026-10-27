@@ -38,6 +38,7 @@ namespace Mesen.ViewModels
 		//The ZX Spectrum's ULA has no tiles, sprites or palette RAM - the PPU viewers don't apply to it
 		private bool HasPpuViewers => IsGameRunning && RomInfo.ConsoleType != ConsoleType.Zx;
 		private bool IsFdsGame => RomInfo.Format == RomFormat.Fds;
+		private bool IsZxGame => RomInfo.ConsoleType == ConsoleType.Zx;
 		private bool IsVsSystemGame => RomInfo.Format == RomFormat.VsSystem || RomInfo.Format == RomFormat.VsDualSystem;
 		private bool IsVsDualSystemGame => RomInfo.Format == RomFormat.VsDualSystem;
 		private List<RecentItem> RecentItems => ConfigManager.Config.RecentFiles.Items;
@@ -268,6 +269,23 @@ namespace Mesen.ViewModels
 				new MainMenuAction(EmulatorShortcut.FdsEjectDisk) {
 					ActionType = ActionType.EjectDisk,
 					IsVisible = () => IsFdsGame,
+				},
+
+				new ContextMenuSeparator() { IsVisible = () => IsZxGame },
+
+				new MainMenuAction(EmulatorShortcut.ZxInsertTape) {
+					ActionType = ActionType.InsertTape,
+					IsVisible = () => IsZxGame,
+				},
+
+				new MainMenuAction(EmulatorShortcut.ZxRewindTape) {
+					ActionType = ActionType.RewindTape,
+					IsVisible = () => IsZxGame,
+				},
+
+				new MainMenuAction(EmulatorShortcut.ZxEjectTape) {
+					ActionType = ActionType.EjectTape,
+					IsVisible = () => IsZxGame,
 				},
 
 				new ContextMenuSeparator() { IsVisible = () => IsVsSystemGame },

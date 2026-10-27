@@ -1068,6 +1068,10 @@ void Emulator::ProcessTapeRecorderAction(TapeRecorderAction action, string filen
 		if(recorder) {
 			auto lock = AcquireLock();
 			recorder->ProcessTapeRecorderAction(action, filename);
+		} else if(ITapeRecorder* consoleRecorder = dynamic_cast<ITapeRecorder*>(console.get())) {
+			//Consoles with a built-in tape deck (ZX Spectrum)
+			auto lock = AcquireLock();
+			consoleRecorder->ProcessTapeRecorderAction(action, filename);
 		}
 	}
 }
