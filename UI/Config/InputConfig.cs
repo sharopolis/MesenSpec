@@ -524,6 +524,7 @@ namespace Mesen.Config
 				case ControllerType.WsController:
 				case ControllerType.WsControllerVertical:
 				case ControllerType.Pcv2Controller:
+				case ControllerType.ZxKeyboard:
 					return true;
 			}
 

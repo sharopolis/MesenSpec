@@ -1,0 +1,72 @@
+<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:vm="using:Mesen.ViewModels"
+	xmlns:c="using:Mesen.Controls"
+	xmlns:v="using:Mesen.Views"
+	xmlns:l="using:Mesen.Localization"
+	mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="350"
+	VerticalAlignment="Stretch"
+	HorizontalAlignment="Stretch"
+	x:DataType="vm:ZxConfigViewModel"
+	x:Class="Mesen.Views.ZxConfigView"
+>
+	<Design.DataContext>
+		<vm:ZxConfigViewModel />
+	</Design.DataContext>
+
+	<ScrollViewer AllowAutoHide="False" HorizontalScrollBarVisibility="Auto" Padding="0 0 2 0">
+		<StackPanel>
+			<v:VideoConfigOverrideView DataContext="{Binding Config.ConfigOverrides}" />
+
+			<c:OptionSection Header="{l:Translate tpgGeneral}">
+				<Grid ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto">
+					<TextBlock Text="{l:Translate lblModel}"/>
+					<c:EnumComboBox
+						SelectedItem="{Binding Config.Model}"
+						Grid.Column="1"
+						MinWidth="160"
+					/>
+				</Grid>
+			</c:OptionSection>
+
+			<c:OptionSection Header="{l:Translate tpgAudio}">
+				<c:GroupBox Header="{l:Translate grpVolume}" HorizontalAlignment="Left">
+					<StackPanel Orientation="Horizontal" Height="120">
+						<c:MesenSlider
+							Text="{l:Translate lblBeeper}"
+							Value="{Binding Config.BeeperVolume}"
+							Minimum="0"
+							Maximum="100"
+							Orientation="Vertical"
+							Margin="5 0"
+						/>
+					</StackPanel>
+				</c:GroupBox>
+			</c:OptionSection>
+
+			<c:OptionSection Header="{l:Translate tpgInput}">
+				<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" HorizontalAlignment="Left">
+					<TextBlock Grid.Row="0" Grid.Column="0" Text="{l:Translate lblKeyboard}" />
+					<c:InputComboBox
+						Grid.Row="0" Grid.Column="1"
+						Port="0"
+						Config="{Binding Config.Keyboard}"
+						ControllerType="{Binding Config.Keyboard.Type}"
+						AvailableValues="{Binding AvailableKeyboardTypes}"
+					/>
+					<TextBlock
+						Grid.Row="1" Grid.ColumnSpan="2"
+						Margin="0 5 0 0"
+						Foreground="{StaticResource MesenGrayTextColor}"
+						TextWrapping="Wrap"
+						MaxWidth="400"
+						Text="{l:Translate lblKeyboardHint}"
+					/>
+				</Grid>
+			</c:OptionSection>
+		</StackPanel>
+	</ScrollViewer>
+</UserControl>

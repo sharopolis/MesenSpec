@@ -429,6 +429,9 @@
     <Compile Update="Views\OtherConsolesConfigView.axaml.cs">
       <DependentUpon>OtherConsolesConfigView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\ZxConfigView.axaml.cs">
+      <DependentUpon>ZxConfigView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\CvConfigView.axaml.cs">
       <DependentUpon>CvConfigView.axaml</DependentUpon>
     </Compile>

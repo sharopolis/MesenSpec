@@ -70,6 +70,12 @@ namespace Mesen.Controls
 			NavigateTo(ConfigWindowTab.Ws);
 		}
 
+		private void OnClickZx(object sender, RoutedEventArgs e)
+		{
+			//Single page (no sub-tabs to select)
+			NavigateTo(ConfigWindowTab.Zx);
+		}
+
 		private void NavigateTo(ConfigWindowTab console)
 		{
 			if(this.GetWindow()?.DataContext is ConfigViewModel cfg) {

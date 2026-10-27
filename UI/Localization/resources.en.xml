@@ -609,6 +609,19 @@
 			<Control ID="tabColecoVision">ColecoVision</Control>
 		</Form>
 
+		<Form ID="ZxConfigView">
+			<Control ID="tpgGeneral">General</Control>
+			<Control ID="lblModel">Model:</Control>
+
+			<Control ID="tpgAudio">Audio</Control>
+			<Control ID="grpVolume">Volume</Control>
+			<Control ID="lblBeeper">Beeper</Control>
+
+			<Control ID="tpgInput">Input</Control>
+			<Control ID="lblKeyboard">Keyboard:</Control>
+			<Control ID="lblKeyboardHint">Click Setup to map Spectrum keys to your keyboard. The shortcut keys (cursor keys, DELETE, EDIT, BREAK) press the matching CAPS SHIFT combinations.</Control>
+		</Form>
+
 		<Form ID="CvConfigView">
 			<Control ID="tpgGeneral">General</Control>
 			<Control ID="lblRegion">Region:</Control>
@@ -701,6 +714,7 @@
 			<Control ID="tabPcEngine">PC Engine</Control>
 			<Control ID="tabSms">SMS</Control>
 			<Control ID="tabWs">WonderSwan</Control>
+			<Control ID="tabZx">ZX Spectrum</Control>
 			<Control ID="tabOtherConsoles">Other systems</Control>
 			<Control ID="tabPreferences">Preferences</Control>
 
@@ -1077,6 +1091,7 @@
 			<Control ID="lblPcEngine">PC Engine</Control>
 			<Control ID="lblSms">SMS</Control>
 			<Control ID="lblWs">WonderSwan</Control>
+			<Control ID="lblZx">ZX Spectrum</Control>
 		</Form>
 		
 		<Form ID="AudioPlayerView">
@@ -3764,6 +3779,7 @@ E
 			<Value ID="PcEngine">PC Engine</Value>
 			<Value ID="Sms">SMS</Value>
 			<Value ID="Ws">WonderSwan</Value>
+			<Value ID="Zx">ZX Spectrum</Value>
 			<Value ID="OtherConsoles">Other systems</Value>
 
 			<Value ID="Resume">Resume</Value>
