@@ -9,7 +9,7 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
     input (`ZxControlManager` + `Input/ZxKeyboardDevice`, keys mapped in `ZxConfig.Keyboard`; `Input/ZxKempstonJoystick`
     on port 1 from `ZxConfig.Joystick`, copied into ZxMemoryManager each frame - port 0x1F, decoded on A5-A7 = 0), ROM via
     `FirmwareHelper::LoadZxRom` (48.rom, or 128.rom / 128-0.rom + 128-1.rom, in Mesen's Firmware folder), auto-types
-    LOAD "" for tapes (ENTER on the 128K menu). The model comes from `ZxConfig.Model` (snapshots force 48K for now).
+    LOAD "" for tapes (ENTER on the 128K menu). The model comes from `ZxConfig.Model` (snapshots use their own, from ZxSnapshot::GetModel).
   - `ZxCpu` - Z80 derived from `Core/SMS/SmsCpu`, with Fuse-style timing: every memory cycle and every internal
     cycle carries its bus address so the machine can apply ULA contention; ports are 16-bit.
   - `IZxBus` - everything the CPU sees of the machine (contention, memory, ports, /INT).
@@ -23,7 +23,8 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
     are these arrays, so debugger absolute addresses go through GetMappedOffset/GetCpuAddress.
   - `ZxUla` - frame timing (`ZxTiming` in ZxTypes.h), contention, floating bus, /INT, and the picture (352x288,
     drawn lazily per 8-pixel chunk up to the current T-state before video RAM/border changes).
-  - `ZxSnapshot` - .sna/.z80 load and save (48K).
+  - `ZxSnapshot` - .sna/.z80 load and save, 48K and 128K (the 128K .sna has PC/0x7FFD fields and the other banks; .z80
+    v3 hardware mode 4, pages 3-10 = banks 0-7, plus the AY registers). +3/+2A snapshots are rejected.
   - `ZxTapeImage` parses .tap/.tzx (signature-detected) into a flat block list (TZX loops/calls/jumps unrolled, info
     blocks dropped; 0x18 CSW and 0x19 generalized data are skipped - TODOZX) and expands one block at a time into
     pulses (scaled from 3.5MHz). `ZxTape` plays them through the EAR input, lazily up to each port 0xFE read
@@ -82,7 +83,9 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
 - Kempston joystick (ControllerType::ZxKempston, ZxJoystickView; config upgrade ZxJoystick gives it the gamepad
   presets only, since the host keyboard is the Spectrum's). Lua names: up/down/left/right/fire. Note: upstream Mesen's
   emu.setInput reads the port from the 3rd argument (lua_settop(lua, 4) in LuaApi::SetInput) - use setInput(t, 0, port).
-- Next: 128K snapshots (.sna/.z80), +2/+3, TZX 0x19 (generalized data) / CSW, Sinclair/cursor joysticks.
+- 128K snapshots: unit-tested round trips (both .sna layouts, AY in .z80), SF2 resumes from both; the real core loads
+  them as 128K whatever the model setting. Mesen's UI has no .sna/.z80 save yet (ZxRun --save does).
+- Next: +2/+3, TZX 0x19 (generalized data) / CSW, Sinclair/cursor joysticks, .sna/.z80 export from the UI.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

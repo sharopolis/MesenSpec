@@ -38,8 +38,13 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 
 	string ext = romFile.GetFileExtension();
 
-	//Snapshots are 48K-only for now, tapes run on the model selected in the settings
-	ZxModel model = ZxSnapshot::IsSnapshot(ext) ? ZxModel::Spectrum48K : _emu->GetSettings()->GetZxConfig().Model;
+	//Snapshots run on the model they were taken on, tapes on the model selected in the settings
+	ZxModel model = _emu->GetSettings()->GetZxConfig().Model;
+	string error;
+	if(ZxSnapshot::IsSnapshot(ext) && !ZxSnapshot::GetModel(fileData, ext, model, error)) {
+		MessageManager::DisplayMessage("Error", error);
+		return LoadRomResult::Failure;
+	}
 
 	vector<uint8_t> rom;
 	if(!FirmwareHelper::LoadZxRom(_emu, model, rom)) {
@@ -53,7 +58,6 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 		return LoadRomResult::Failure;
 	}
 
-	string error;
 	if(ZxSnapshot::IsSnapshot(ext)) {
 		_romFormat = RomFormat::ZxSnapshot;
 		if(!_machine->LoadSnapshot(fileData, ext, error)) {

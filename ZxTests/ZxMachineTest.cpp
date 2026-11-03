@@ -2,6 +2,7 @@
 //Usage: ZxMachineTest <48.rom> [<128-0.rom> <128-1.rom> | <128.rom>]
 #include "pch.h"
 #include "ZX/ZxMachine.h"
+#include "ZX/ZxSnapshot.h"
 #include "ZxTestUtils.h"
 
 using namespace ZxTestUtils;
@@ -389,6 +390,58 @@ static void Test128Boot(const vector<uint8_t>& rom)
 	CHECK(IsTextOnScreen(*zx, 23, "\x7f 1986 Sinclair Research Ltd"), "128K copyright message not found:\n%s", text.c_str());
 }
 
+static void Test128Snapshots(const vector<uint8_t>& rom, const vector<uint8_t>& rom48)
+{
+	//Paged bank 3 (normal .sna layout) and bank 5 (which appears twice in a .sna), shadow screen in the second case
+	for(uint8_t port7ffd : { (uint8_t)0x13, (uint8_t)0x1D }) {
+		unique_ptr<ZxMachine> zx = Create128(rom);
+		RunFrames(*zx, 100);
+		ZxMemoryManager& mm = zx->GetMemoryManager();
+		uint8_t* ram = mm.GetRam();
+		for(uint32_t i = 0; i < 8 * 0x4000; i++) {
+			ram[i] = (uint8_t)(i * 13 + (i >> 14) * 37);
+		}
+		mm.SetPort7ffd(port7ffd);
+		ZxAy& ay = zx->GetAy();
+		for(uint8_t i = 0; i < 14; i++) {
+			ay.SelectRegister(i);
+			ay.WriteRegister(zx->GetCpu().GetCycleCount(), 0x11 * i);
+		}
+		ay.SelectRegister(7);
+		ZxCpuState& a = zx->GetCpu().GetState();
+		a.PC = 0x8123;
+		a.SP = 0xC456;
+		a.IXH = 0x12; a.IXL = 0x34;
+
+		for(string ext : { ".sna", ".z80" }) {
+			string name = ext + string(port7ffd == 0x13 ? " (bank 3)" : " (bank 5)");
+			vector<uint8_t> data = zx->SaveSnapshot(ext);
+			ZxModel model = ZxModel::Spectrum48K;
+			string error;
+			CHECK(ZxSnapshot::GetModel(data, ext, model, error) && model == ZxModel::Spectrum128K, "%s: detected as 128K (%d bytes)", name.c_str(), (int)data.size());
+
+			unique_ptr<ZxMachine> copy = Create128(rom);
+			RunFrames(*copy, 100);
+			CHECK(copy->LoadSnapshot(data, ext, error), "%s: %s", name.c_str(), error.c_str());
+			ZxCpuState& b = copy->GetCpu().GetState();
+			CHECK(a.PC == b.PC && a.SP == b.SP && a.A == b.A && a.Flags == b.Flags && a.IXH == b.IXH && a.IXL == b.IXL && a.IM == b.IM,
+				"%s: registers (PC %04X/%04X SP %04X/%04X)", name.c_str(), a.PC, b.PC, a.SP, b.SP);
+			CHECK(memcmp(ram, copy->GetMemoryManager().GetRam(), 8 * 0x4000) == 0, "%s: all 8 RAM banks", name.c_str());
+			CHECK(copy->GetMemoryManager().GetPort7ffd() == port7ffd, "%s: port 0x7FFD %02X", name.c_str(), copy->GetMemoryManager().GetPort7ffd());
+			CHECK(copy->GetMemoryManager().GetVideoRam() == copy->GetMemoryManager().GetRam() + ((port7ffd & 0x08) ? 7 : 5) * 0x4000, "%s: screen bank", name.c_str());
+			if(ext == ".z80") {
+				ZxAyState ayA = zx->GetAy().GetState();
+				ZxAyState ayB = copy->GetAy().GetState();
+				CHECK(memcmp(ayA.Registers, ayB.Registers, 16) == 0 && ayB.SelectedRegister == 7, "%s: AY registers", name.c_str());
+			}
+
+			//A 128K snapshot can't be loaded on a 48K
+			unique_ptr<ZxMachine> zx48 = CreateMachine(rom48);
+			CHECK(!zx48->LoadSnapshot(data, ext, error), "%s: rejected by the 48K", name.c_str());
+		}
+	}
+}
+
 static void Test128Paging(const vector<uint8_t>& rom)
 {
 	unique_ptr<ZxMachine> zx = Create128(rom);
@@ -618,6 +671,7 @@ int main(int argc, char** argv)
 	if(rom128.size() == 0x8000) {
 		Test128Boot(rom128);
 		Test128Paging(rom128);
+		Test128Snapshots(rom128, rom);
 		Test128Ula(rom128);
 		TestAy(rom128, rom);
 	} else if(argc > 2) {

@@ -23,12 +23,12 @@ bool ZxMachine::LoadRom(const vector<uint8_t>& rom)
 
 bool ZxMachine::LoadSnapshot(const vector<uint8_t>& data, const string& extension, string& error)
 {
-	return ZxSnapshot::Load(data, extension, _cpu, _memoryManager, _ula, error);
+	return ZxSnapshot::Load(data, extension, *this, error);
 }
 
 vector<uint8_t> ZxMachine::SaveSnapshot(const string& extension)
 {
-	return ZxSnapshot::Save(extension, _cpu, _memoryManager, _ula);
+	return ZxSnapshot::Save(extension, *this);
 }
 
 bool ZxMachine::LoadTape(const vector<uint8_t>& data, string& error)

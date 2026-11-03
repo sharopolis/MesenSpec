@@ -32,7 +32,7 @@ public:
 	//16K for the 48K, 32K (ROM 0 then ROM 1) for the 128K
 	bool LoadRom(const vector<uint8_t>& rom);
 
-	//extension is lowercase, with the dot (".sna", ".z80")
+	//extension is lowercase, with the dot (".sna", ".z80"). The snapshot must be for this model (see ZxSnapshot::GetModel).
 	bool LoadSnapshot(const vector<uint8_t>& data, const string& extension, string& error);
 
 	//extension is lowercase, with the dot (".sna", ".z80"). Returns an empty vector if the format isn't supported.
