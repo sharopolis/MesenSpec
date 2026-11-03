@@ -37,7 +37,7 @@ namespace Mesen.Utilities
 		public const string MesenLabelExt = "mlb";
 		public const string NesAsmLabelExt = "fns";
 		public const string BinExt = "bin";
-		public const string ZxTapeExt = "tap";
+		public const string ZxTapeExt = "[[ZXTAPEFILES]]";
 		public const string NesExt = "nes";
 		public const string SufamiTurboExt = "st";
 		public const string SpcExt = "spc";
@@ -62,7 +62,7 @@ namespace Mesen.Utilities
 								"*.sms", "*.gg", "*.sg", "*.col",
 								"*.gba",
 								"*.ws", "*.wsc", "*.pc2",
-								"*.sna", "*.z80", "*.tap",
+								"*.sna", "*.z80", "*.tap", "*.tzx",
 								"*.zip", "*.7z",
 								"*.ips", "*.bps"
 							}
@@ -76,8 +76,10 @@ namespace Mesen.Utilities
 						filter.Add(new FilePickerFileType("SG-1000 ROM files") { Patterns = new List<string>() { "*.sg" } });
 						filter.Add(new FilePickerFileType("ColecoVision ROM files") { Patterns = new List<string>() { "*.col" } });
 						filter.Add(new FilePickerFileType("WonderSwan ROM files") { Patterns = new List<string>() { "*.ws", "*.wsc", "*.pc2" } });
-						filter.Add(new FilePickerFileType("ZX Spectrum files") { Patterns = new List<string>() { "*.sna", "*.z80", "*.tap" } });
+						filter.Add(new FilePickerFileType("ZX Spectrum files") { Patterns = new List<string>() { "*.sna", "*.z80", "*.tap", "*.tzx" } });
 						filter.Add(new FilePickerFileType("Patch files (IPS/BPS)") { Patterns = new List<string>() { "*.ips", "*.bps" } });
+					} else if(ext == FileDialogHelper.ZxTapeExt) {
+						filter.Add(new FilePickerFileType("ZX Spectrum tapes") { Patterns = new List<string>() { "*.tap", "*.tzx" } });
 					} else if(ext == FileDialogHelper.FirmwareExt) {
 						filter.Add(new FilePickerFileType("All firmware files") { Patterns = new List<string>() { "*.sfc", "*.pce", "*.nes", "*.bin", "*.rom", "*.col", "*.sms", "*.gg", "*.gba", "*.ws", "*.wsc" } });
 					} else if(ext == FileDialogHelper.LabelFileExt) {

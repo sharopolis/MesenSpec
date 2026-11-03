@@ -22,6 +22,8 @@ private:
 	//The frame buffer handed to the video decoder alternates between these (the decoder runs on another thread)
 	uint16_t _outputBuffers[2][ZxConstants::PixelCount] = {};
 	uint8_t _currentBuffer = 0;
+	//Maximum speed was turned on because the tape is playing
+	bool _tapeFastForward = false;
 	vector<int16_t> _stereoSamples;
 
 	//Keys typed automatically after the machine boots (LOAD "" when a tape is opened), as {frame, row, key} presses
@@ -37,9 +39,10 @@ private:
 	void ApplyAutoKeys();
 	void SendFrame(uint16_t* frameBuffer);
 	void InsertTape(string filename);
+	void UpdateTapeFastForward(bool enabled);
 
 public:
-	static vector<string> GetSupportedExtensions() { return { ".sna", ".z80", ".tap" }; }
+	static vector<string> GetSupportedExtensions() { return { ".sna", ".z80", ".tap", ".tzx" }; }
 	static vector<string> GetSupportedSignatures() { return {}; }
 
 	ZxConsole(Emulator* emu);

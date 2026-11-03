@@ -100,6 +100,8 @@ namespace Mesen.ViewModels
 				EmulatorShortcut.StopRecordTape,
 
 				EmulatorShortcut.ZxInsertTape,
+				EmulatorShortcut.ZxPlayTape,
+				EmulatorShortcut.ZxStopTape,
 				EmulatorShortcut.ZxRewindTape,
 				EmulatorShortcut.ZxEjectTape,
 

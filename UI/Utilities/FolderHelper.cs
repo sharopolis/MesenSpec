@@ -18,7 +18,7 @@ namespace Mesen.Utilities
 			".sms", ".gg", ".sg", ".col",
 			".gba",
 			".ws", ".wsc", ".pc2",
-			".sna", ".z80", ".tap"
+			".sna", ".z80", ".tap", ".tzx"
 		};
 
 		public static bool IsRomFile(string path)

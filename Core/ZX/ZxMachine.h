@@ -38,7 +38,7 @@ public:
 	//extension is lowercase, with the dot (".sna", ".z80"). Returns an empty vector if the format isn't supported.
 	vector<uint8_t> SaveSnapshot(const string& extension);
 
-	//Inserts a tape (.tap) - it is read when the ROM's LOAD routine runs
+	//Inserts a tape (.tap or .tzx, recognized from its contents) - see ZxTape
 	bool LoadTape(const vector<uint8_t>& data, string& error);
 
 	void Reset();

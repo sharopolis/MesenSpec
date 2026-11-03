@@ -8,6 +8,7 @@ class ZxUla;
 class ZxKeyboard;
 class ZxBeeper;
 class ZxAy;
+class ZxTape;
 
 //Memory map and I/O. The 64K address space is made of four 16K slots:
 //- 48K: ROM, then 48K of RAM (0x4000-0x7FFF is shared with the ULA, and contended). The RAM array is linear.
@@ -23,6 +24,7 @@ private:
 	ZxKeyboard* _keyboard = nullptr;
 	ZxBeeper* _beeper = nullptr;
 	ZxAy* _ay = nullptr;
+	ZxTape* _tape = nullptr;
 
 	ZxModel _model = ZxModel::Spectrum48K;
 	uint32_t _romSize = BankSize;
@@ -44,9 +46,6 @@ private:
 	//bit 4 ROM 1, bit 5 locks paging until the next reset)
 	uint8_t _port7ffd = 0;
 
-	//Level of the EAR input (tape signal)
-	bool _earInput = false;
-
 	__forceinline bool IsContended(uint16_t addr) { return _slotContended[addr >> 14]; }
 
 	//Updates the memory map from the paging register. Must be called after Render() if the screen changes.
@@ -54,7 +53,7 @@ private:
 
 public:
 	//ay: the 128K's sound chip (nullptr on the 48K)
-	void Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay);
+	void Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay, ZxTape* tape);
 	void Reset();
 
 	//16K for the 48K, 32K (ROM 0 then ROM 1) for the 128K
@@ -77,8 +76,8 @@ public:
 	//The 48K BASIC ROM, where the tape routines are, is paged in
 	bool IsBasicRomPaged() { return !HasPaging() || (_port7ffd & 0x10); }
 
-	void SetEarInput(bool level) { _earInput = level; }
-	bool GetEarInput() { return _earInput; }
+	//Level of the EAR input (tape signal)
+	bool GetEarInput();
 	uint8_t GetPortFe() { return _portFe; }
 	uint8_t GetPort7ffd() { return _port7ffd; }
 

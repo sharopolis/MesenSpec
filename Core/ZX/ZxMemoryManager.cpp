@@ -1,14 +1,16 @@
 #include "pch.h"
 #include "ZX/ZxMemoryManager.h"
+#include "ZX/ZxTape.h"
 #include "ZX/ZxUla.h"
 #include "ZX/ZxKeyboard.h"
 #include "ZX/ZxBeeper.h"
 #include "ZX/ZxAy.h"
 #include "Utilities/Serializer.h"
 
-void ZxMemoryManager::Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay)
+void ZxMemoryManager::Init(ZxModel model, ZxUla* ula, ZxKeyboard* keyboard, ZxBeeper* beeper, ZxAy* ay, ZxTape* tape)
 {
 	_ay = ay;
+	_tape = tape;
 	_model = model;
 	_ula = ula;
 	_keyboard = keyboard;
@@ -23,7 +25,6 @@ void ZxMemoryManager::Reset()
 	memset(_ram, 0, sizeof(_ram));
 	_portFe = 0;
 	_port7ffd = 0;
-	_earInput = false;
 	UpdateMapping();
 }
 
@@ -131,10 +132,15 @@ uint8_t ZxMemoryManager::Peek(uint16_t addr)
 	return _slots[addr >> 14][addr & 0x3FFF];
 }
 
+bool ZxMemoryManager::GetEarInput()
+{
+	return _tape->GetEarLevel();
+}
+
 uint8_t ZxMemoryManager::PeekPort(uint16_t port)
 {
 	if(!(port & 0x01)) {
-		bool ear = _earInput || (_portFe & 0x10);
+		bool ear = _tape->GetEarLevel() || (_portFe & 0x10);
 		return 0xA0 | (ear ? 0x40 : 0) | _keyboard->Read(port >> 8);
 	}
 	if(_ay && (port & 0xC002) == 0xC000) {
@@ -173,6 +179,7 @@ uint8_t ZxMemoryManager::ReadPort(uint16_t port, uint64_t cycle)
 	if(!(port & 0x01)) {
 		//Bits 0-4: keyboard, bit 6: EAR input, bits 5 and 7 are always set.
 		//On an Issue 3 board with no tape signal, bit 6 follows the EAR output bit
+		_tape->ReadEar(cycle, IsBasicRomPaged());
 		return PeekPort(port);
 	}
 
@@ -221,7 +228,6 @@ void ZxMemoryManager::Serialize(Serializer& s)
 {
 	SVArray(_ram, _ramSize);
 	SV(_portFe);
-	SV(_earInput);
 	SV(_port7ffd);
 	if(!s.IsSaving()) {
 		UpdateMapping();

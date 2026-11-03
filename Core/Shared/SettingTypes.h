@@ -872,6 +872,9 @@ struct ZxConfig
 
 	uint32_t BeeperVolume = 100;
 	uint32_t AyVolume = 100;
+
+	//Runs at maximum speed while the tape plays in real time
+	bool FastForwardTape = true;
 };
 
 struct AudioPlayerConfig
@@ -1139,6 +1142,8 @@ enum class EmulatorShortcut
 	ZxInsertTape,
 	ZxRewindTape,
 	ZxEjectTape,
+	ZxPlayTape,
+	ZxStopTape,
 
 	ShortcutCount,
 };

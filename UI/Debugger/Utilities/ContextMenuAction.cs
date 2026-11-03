@@ -695,6 +695,10 @@ namespace Mesen.Debugger.Utilities
 
 		[IconFile("Tape")]
 		InsertTape,
+		[IconFile("MediaPlay")]
+		PlayTape,
+		[IconFile("MediaStop")]
+		StopTape,
 		[IconFile("PrevTrack")]
 		RewindTape,
 		[IconFile("MediaEject")]

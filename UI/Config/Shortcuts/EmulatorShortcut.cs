@@ -145,6 +145,8 @@ namespace Mesen.Config.Shortcuts
 		ZxInsertTape,
 		ZxRewindTape,
 		ZxEjectTape,
+		ZxPlayTape,
+		ZxStopTape,
 
 		LastValidValue,
 		[Obsolete] LoadRandomGame,

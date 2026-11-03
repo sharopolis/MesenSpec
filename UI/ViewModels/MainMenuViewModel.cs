@@ -278,6 +278,16 @@ namespace Mesen.ViewModels
 					IsVisible = () => IsZxGame,
 				},
 
+				new MainMenuAction(EmulatorShortcut.ZxPlayTape) {
+					ActionType = ActionType.PlayTape,
+					IsVisible = () => IsZxGame,
+				},
+
+				new MainMenuAction(EmulatorShortcut.ZxStopTape) {
+					ActionType = ActionType.StopTape,
+					IsVisible = () => IsZxGame,
+				},
+
 				new MainMenuAction(EmulatorShortcut.ZxRewindTape) {
 					ActionType = ActionType.RewindTape,
 					IsVisible = () => IsZxGame,

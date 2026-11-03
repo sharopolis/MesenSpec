@@ -190,7 +190,7 @@ static void TestTapeTrap(const vector<uint8_t>& rom)
 	RunFrames(*zx, 1);
 	CHECK(s.PC == 0x8100, "returned to the loader's address: PC=%04X", s.PC);
 	CHECK(mm.Peek(0x9000) == 0x11 && mm.Peek(0x9001) == 0x22 && mm.Peek(0x9002) == 0x33, "block loaded: %02X %02X %02X", mm.Peek(0x9000), mm.Peek(0x9001), mm.Peek(0x9002));
-	CHECK(zx->GetTape().GetNextBlock() == 1, "tape advanced");
+	CHECK(zx->GetTape().GetCurrentBlock() == 1, "tape advanced");
 	CHECK(!zx->GetTape().TakeEndReached(), "end of tape not reported yet");
 
 	//Past the last block, the ROM waits for a signal (end of tape reported once), until the tape is rewound
@@ -209,6 +209,83 @@ static void TestTapeTrap(const vector<uint8_t>& rom)
 
 	zx->GetTape().Eject();
 	CHECK(!zx->GetTape().IsLoaded() && !zx->GetTape().TakeEndReached(), "tape ejected");
+}
+
+static void TestRealTimeTape(const vector<uint8_t>& rom)
+{
+	//A TZX with a standard speed block split into a pure tone, sync pulses and pure data: the ROM can read it, but not
+	//through the trap - the tape must start playing and the ROM must load it from the EAR input
+	vector<uint8_t> payload = { 0xFF };
+	for(int i = 0; i < 16; i++) {
+		payload.push_back((uint8_t)(i * 17 + 3));
+	}
+	uint8_t checksum = 0;
+	for(uint8_t v : payload) {
+		checksum ^= v;
+	}
+	payload.push_back(checksum);
+
+	vector<uint8_t> tzx = { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A, 1, 20 };
+	auto add16 = [&](uint16_t v) { tzx.push_back((uint8_t)v); tzx.push_back(v >> 8); };
+	tzx.push_back(0x30); //Text description (skipped)
+	tzx.push_back(4);
+	tzx.insert(tzx.end(), { 't', 'e', 's', 't' });
+	tzx.push_back(0x12); //Pure tone: the pilot
+	add16(2168);
+	add16(3223);
+	tzx.push_back(0x13); //Pulse sequence: the sync pulses
+	tzx.push_back(2);
+	add16(667);
+	add16(735);
+	tzx.push_back(0x14); //Pure data
+	add16(855);
+	add16(1710);
+	tzx.push_back(8);
+	add16(1000);
+	tzx.push_back((uint8_t)payload.size());
+	tzx.push_back(0);
+	tzx.push_back(0);
+	tzx.insert(tzx.end(), payload.begin(), payload.end());
+
+	unique_ptr<ZxMachine> zx = CreateMachine(rom);
+	RunFrames(*zx, 100);
+	string error;
+	CHECK(zx->LoadTape(tzx, error), "tzx: %s", error.c_str());
+	CHECK(zx->GetTape().GetBlockCount() == 3, "tzx blocks: %d", (int)zx->GetTape().GetBlockCount());
+
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	const uint8_t code[] = {
+		0xDD, 0x21, 0x00, 0x90, //LD IX,0x9000
+		0x11, 0x10, 0x00,       //LD DE,16
+		0x3E, 0xFF,             //LD A,0xFF
+		0x37,                   //SCF (LOAD)
+		0xCD, 0x56, 0x05,       //CALL LD-BYTES
+		0xF3,                   //DI
+		0x38, 0x02,             //JR C,ok
+		0x18, 0xFE,             //JR $ (failed: 0x8010)
+		0x18, 0xFE,             //ok: JR $ (0x8012)
+	};
+	for(size_t i = 0; i < sizeof(code); i++) {
+		mm.DirectWrite(0x8000 + (uint16_t)i, code[i]);
+	}
+	ZxCpuState& s = zx->GetCpu().GetState();
+	s.PC = 0x8000;
+	s.SP = 0xF000;
+	RunFrames(*zx, 1);
+	CHECK(zx->GetTape().IsPlaying(), "tape playing for a block the trap can't load");
+
+	//Pilot (~2s) + data
+	RunFrames(*zx, 150);
+	bool loaded = true;
+	for(int i = 0; i < 16; i++) {
+		loaded &= mm.Peek(0x9000 + i) == payload[i + 1];
+	}
+	CHECK(s.PC == 0x8012, "loaded in real time: PC=%04X", s.PC);
+	CHECK(loaded, "real-time data: %02X %02X %02X", mm.Peek(0x9000), mm.Peek(0x9001), mm.Peek(0x900F));
+
+	//Nothing reads the tape anymore - it stops by itself after a second
+	RunFrames(*zx, 60);
+	CHECK(!zx->GetTape().IsPlaying(), "tape stopped after loading");
 }
 
 static void TestSnapshots(const vector<uint8_t>& rom)
@@ -485,6 +562,7 @@ int main(int argc, char** argv)
 	TestKeyboard(rom);
 	TestSnapshots(rom);
 	TestTapeTrap(rom);
+	TestRealTimeTape(rom);
 
 	//128K tests, if its ROM is given (one 32K file or the two 16K halves)
 	vector<uint8_t> rom128;

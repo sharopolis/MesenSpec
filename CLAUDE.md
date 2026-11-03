@@ -22,9 +22,16 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
     are these arrays, so debugger absolute addresses go through GetMappedOffset/GetCpuAddress.
   - `ZxUla` - frame timing (`ZxTiming` in ZxTypes.h), contention, floating bus, /INT, and the picture (352x288,
     drawn lazily per 8-pixel chunk up to the current T-state before video RAM/border changes).
-  - `ZxSnapshot` - .sna/.z80 load and save (48K). `ZxTape` - .tap via a ROM trap at LD-START (0x056C, inside
-    LD-BYTES, only when the 48K BASIC ROM is paged in) - custom loaders jump into LD-BYTES past 0x0556, so the flag and
-    LOAD/VERIFY come from A'/F' and the trap returns through the stacked address.
+  - `ZxSnapshot` - .sna/.z80 load and save (48K).
+  - `ZxTapeImage` parses .tap/.tzx (signature-detected) into a flat block list (TZX loops/calls/jumps unrolled, info
+    blocks dropped; 0x18 CSW and 0x19 generalized data are skipped - TODOZX) and expands one block at a time into
+    pulses (scaled from 3.5MHz). `ZxTape` plays them through the EAR input, lazily up to each port 0xFE read
+    (ZxMemoryManager::ReadPort -> ReadEar) and each frame end; the signal is also mixed into the beeper.
+    Standard-speed blocks load instantly via a ROM trap at LD-START (0x056C, inside LD-BYTES, only when the 48K BASIC
+    ROM is paged in) - custom loaders jump into LD-BYTES past 0x0556, so the flag and LOAD/VERIFY come from A'/F' and
+    the trap returns through the stacked address; for other blocks the trap starts the tape instead.
+    Auto play: Fuse's loader detection (port reads <= 500 T-states apart with B changing by 1, outside the ROM loader).
+    Auto stop: no such read for 1 second, or a TZX stop block. Position/state is in save states.
 - `ZxTests/` - headless tools, no SDL/.NET needed (built with g++, independently of the main build):
   - `make -f ZxTests/makefile test` runs the Fuse Z80 suite and `ZxMachineTest` (uses ZxTests/roms/48.rom, or ZXROM=path;
     the 128K tests run if ZxTests/roms has 128-0.rom and 128-1.rom - Ubuntu's spectrum-roms package has them).
@@ -66,11 +73,12 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
   same as Mesen's SMS).
 - 128K stage 2: AY (tone/noise/envelope, AY volume table, register read masks), AY volume slider, AY register viewer
   tab. Unit-tested (tone frequency, all envelope shapes, ports); 128 BASIC PLAY "a" measures 440 Hz.
-- Tape controls: Game menu Insert Tape / Rewind Tape / Eject Tape (EmulatorShortcut ZxInsertTape/ZxRewindTape/
-  ZxEjectTape, handled by ZxConsole; the UI's file dialog inserts through ITapeRecorder Play, which Emulator falls back
-  to on the console itself). OSD "End of tape" when the ROM waits past the last block. The tape position is not in
-  save states.
-- Next: 128K snapshots (.sna/.z80), +2/+3, real-time tape (TZX), Kempston.
+- Tape controls: Game menu Insert / Play / Stop / Rewind / Eject Tape (EmulatorShortcut ZxInsertTape, ZxPlayTape,
+  ZxStopTape, ZxRewindTape, ZxEjectTape, handled by ZxConsole; the UI's file dialog inserts through ITapeRecorder Play,
+  which Emulator falls back to on the console itself). OSD "End of tape" when the ROM waits past the last block.
+  ZxConfig.FastForwardTape sets EmulationFlags::MaximumSpeed while the tape plays.
+- Real-time tape/TZX: Target Renegade's Speedlock 7 TZX loads (48K headless, 128K through Mesen's test runner).
+- Next: 128K snapshots (.sna/.z80), +2/+3, Kempston, TZX 0x19 (generalized data) / CSW.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

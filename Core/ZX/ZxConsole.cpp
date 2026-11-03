@@ -26,6 +26,7 @@ ZxConsole::ZxConsole(Emulator* emu)
 
 ZxConsole::~ZxConsole()
 {
+	UpdateTapeFastForward(false);
 }
 
 LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
@@ -59,7 +60,7 @@ LoadRomResult ZxConsole::LoadRom(VirtualFile& romFile)
 			MessageManager::DisplayMessage("Error", error);
 			return LoadRomResult::Failure;
 		}
-	} else if(ZxTape::IsTape(ext)) {
+	} else if(ZxTapeImage::IsTape(ext)) {
 		_romFormat = RomFormat::ZxTape;
 		if(!_machine->LoadTape(fileData, error)) {
 			MessageManager::DisplayMessage("Error", error);
@@ -118,6 +119,16 @@ void ZxConsole::ApplyAutoKeys()
 	}
 }
 
+void ZxConsole::UpdateTapeFastForward(bool enabled)
+{
+	//Like the FDS's fast-forward while loading - only changes the flag when the tape starts/stops, so the user's own
+	//fast-forward still works the rest of the time
+	if(enabled != _tapeFastForward) {
+		_tapeFastForward = enabled;
+		_emu->GetSettings()->SetFlagState(EmulationFlags::MaximumSpeed, enabled);
+	}
+}
+
 void ZxConsole::Reset()
 {
 	//Like pressing the reset button (or a power cycle - the ROM clears the RAM either way). The tape stays inserted.
@@ -132,9 +143,11 @@ void ZxConsole::RunFrame()
 	ApplyAutoKeys();
 
 	_machine->RunFrame();
-	if(_machine->GetTape().TakeEndReached()) {
+	ZxTape& tape = _machine->GetTape();
+	if(tape.TakeEndReached()) {
 		MessageManager::DisplayMessage("Tape", "ZxTapeEnd");
 	}
+	UpdateTapeFastForward(_emu->GetSettings()->GetZxConfig().FastForwardTape && tape.IsPlaying());
 
 	_emu->ProcessEvent(EventType::EndFrame, CpuType::Zx);
 	_emu->GetNotificationManager()->SendNotification(ConsoleNotificationType::PpuFrameDone);
@@ -306,11 +319,18 @@ ShortcutState ZxConsole::IsShortcutAllowed(EmulatorShortcut shortcut, uint32_t s
 {
 	switch(shortcut) {
 		case EmulatorShortcut::ZxInsertTape:
+		case EmulatorShortcut::ZxPlayTape:
+		case EmulatorShortcut::ZxStopTape:
 		case EmulatorShortcut::ZxRewindTape:
 		case EmulatorShortcut::ZxEjectTape: {
+			ZxTape& tape = _machine->GetTape();
 			bool allowed = _emu->IsRunning() && !_emu->GetGameClient()->Connected() && !_emu->GetMovieManager()->Playing();
-			if(shortcut != EmulatorShortcut::ZxInsertTape) {
-				allowed = allowed && _machine->GetTape().IsLoaded();
+			switch(shortcut) {
+				default: break;
+				case EmulatorShortcut::ZxPlayTape: allowed = allowed && tape.IsLoaded() && !tape.IsPlaying(); break;
+				case EmulatorShortcut::ZxStopTape: allowed = allowed && tape.IsPlaying(); break;
+				case EmulatorShortcut::ZxRewindTape:
+				case EmulatorShortcut::ZxEjectTape: allowed = allowed && tape.IsLoaded(); break;
 			}
 			return allowed ? ShortcutState::Enabled : ShortcutState::Disabled;
 		}
@@ -326,6 +346,18 @@ void ZxConsole::ProcessNotification(ConsoleNotificationType type, void* paramete
 		ExecuteShortcutParams* params = (ExecuteShortcutParams*)parameter;
 		switch(params->Shortcut) {
 			default: break;
+
+			case EmulatorShortcut::ZxPlayTape: {
+				auto lock = _emu->AcquireLock();
+				_machine->GetTape().Play();
+				break;
+			}
+
+			case EmulatorShortcut::ZxStopTape: {
+				auto lock = _emu->AcquireLock();
+				_machine->GetTape().Stop();
+				break;
+			}
 
 			case EmulatorShortcut::ZxRewindTape: {
 				auto lock = _emu->AcquireLock();
@@ -357,7 +389,7 @@ void ZxConsole::InsertTape(string filename)
 	VirtualFile file(filename);
 	vector<uint8_t> data;
 	string error;
-	if(!ZxTape::IsTape(file.GetFileExtension())) {
+	if(!ZxTapeImage::IsTape(file.GetFileExtension())) {
 		MessageManager::DisplayMessage("Error", "CouldNotLoadFile", file.GetFileName());
 	} else if(!file.ReadFile(data) || !_machine->LoadTape(data, error)) {
 		MessageManager::DisplayMessage("Error", error.empty() ? "CouldNotLoadFile" : error, file.GetFileName());

@@ -146,6 +146,7 @@
     <ClInclude Include="ZX\ZxMemoryManager.h" />
     <ClInclude Include="ZX\ZxSnapshot.h" />
     <ClInclude Include="ZX\ZxTape.h" />
+    <ClInclude Include="ZX\ZxTapeImage.h" />
     <ClInclude Include="ZX\ZxTypes.h" />
     <ClInclude Include="ZX\ZxUla.h" />
     <ClInclude Include="SMS\SmsVdp.h" />
@@ -1001,6 +1002,7 @@
     <ClCompile Include="ZX\ZxSnapshot.cpp" />
     <ClCompile Include="ZX\ZxAy.cpp" />
     <ClCompile Include="ZX\ZxTape.cpp" />
+    <ClCompile Include="ZX\ZxTapeImage.cpp" />
     <ClCompile Include="ZX\ZxUla.cpp" />
     <ClCompile Include="SMS\SmsFmAudio.cpp" />
     <ClCompile Include="SMS\SmsMemoryManager.cpp" />

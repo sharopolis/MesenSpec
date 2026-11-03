@@ -5,8 +5,8 @@
 //  --rom FILE          can be given twice (e.g. 128-0.rom and 128-1.rom) - the files are concatenated, and a 32K ROM
 //                      selects the 128K model
 //  --load FILE         load a .sna/.z80 snapshot (after letting the ROM initialize for 100 frames)
-//  --tape FILE         insert a .tap file (loaded instantly when the ROM's LOAD routine runs - each block loaded and
-//                      the end of the tape are logged)
+//  --tape FILE         insert a .tap/.tzx file (standard blocks are loaded instantly by the ROM's LOAD routine, others
+//                      play in real time - the tape's position, playing state and end are logged)
 //  --frames N          number of frames to run (default 150)
 //  --type FRAME TEXT   type TEXT starting at FRAME (see ZxTestUtils::KeyTyper for the syntax), can be repeated
 //  --auto-scroll       answer the ROM's "scroll?" prompt (useful for programs that print long reports)
@@ -146,10 +146,11 @@ int main(int argc, char** argv)
 		if(!typer.Update(*zx, frame)) {
 			return 2;
 		}
-		size_t tapeBlock = zx->GetTape().GetNextBlock();
+		size_t tapeBlock = zx->GetTape().GetCurrentBlock();
+		bool tapePlaying = zx->GetTape().IsPlaying();
 		zx->RunFrame();
-		if(zx->GetTape().GetNextBlock() != tapeBlock) {
-			fprintf(stderr, "Frame %d: tape at block %d/%d\n", frame, (int)zx->GetTape().GetNextBlock(), (int)zx->GetTape().GetBlockCount());
+		if(zx->GetTape().GetCurrentBlock() != tapeBlock || zx->GetTape().IsPlaying() != tapePlaying) {
+			fprintf(stderr, "Frame %d: tape at block %d/%d%s\n", frame, (int)zx->GetTape().GetCurrentBlock(), (int)zx->GetTape().GetBlockCount(), zx->GetTape().IsPlaying() ? " (playing)" : "");
 		}
 		if(zx->GetTape().TakeEndReached()) {
 			fprintf(stderr, "Frame %d: end of tape (PC=%04X)\n", frame, zx->GetCpu().GetState().PC);

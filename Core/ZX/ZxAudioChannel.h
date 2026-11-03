@@ -36,7 +36,7 @@ public:
 	{
 		if(level != _level) {
 			//The time can be a few T-states past the end of the frame (for the instruction that ends it) - blip_buf allows that
-			blip_add_delta(_blip, (uint32_t)(cycle - _frameStartCycle), level - _level);
+			blip_add_delta(_blip, cycle > _frameStartCycle ? (uint32_t)(cycle - _frameStartCycle) : 0, level - _level);
 			_level = level;
 		}
 	}

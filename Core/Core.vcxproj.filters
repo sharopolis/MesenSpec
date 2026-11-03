@@ -2664,6 +2664,9 @@
     <ClInclude Include="ZX\ZxTape.h">
       <Filter>ZX</Filter>
     </ClInclude>
+    <ClInclude Include="ZX\ZxTapeImage.h">
+      <Filter>ZX</Filter>
+    </ClInclude>
     <ClInclude Include="ZX\ZxTypes.h">
       <Filter>ZX</Filter>
     </ClInclude>
@@ -3252,6 +3255,9 @@
       <Filter>ZX</Filter>
     </ClCompile>
     <ClCompile Include="ZX\ZxTape.cpp">
+      <Filter>ZX</Filter>
+    </ClCompile>
+    <ClCompile Include="ZX\ZxTapeImage.cpp">
       <Filter>ZX</Filter>
     </ClCompile>
     <ClCompile Include="ZX\ZxUla.cpp">

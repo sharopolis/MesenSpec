@@ -30,6 +30,7 @@
 						MinWidth="160"
 					/>
 				</Grid>
+				<CheckBox IsChecked="{Binding Config.FastForwardTape}" Content="{l:Translate chkFastForwardTape}" />
 			</c:OptionSection>
 
 			<c:OptionSection Header="{l:Translate tpgAudio}">

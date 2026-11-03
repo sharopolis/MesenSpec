@@ -8,11 +8,12 @@ ZxMachine::ZxMachine(ZxModel model)
 {
 	_model = model;
 	const ZxTiming& timing = ZxTiming::Get(_model);
-	_memoryManager.Init(_model, &_ula, &_keyboard, &_beeper, HasAy() ? &_ay : nullptr);
+	_memoryManager.Init(_model, &_ula, &_keyboard, &_beeper, HasAy() ? &_ay : nullptr, &_tape);
 	_ula.Init(_model, _memoryManager.GetVideoRam());
 	_beeper.Init(timing.CpuClockRate);
 	_ay.Init(timing.CpuClockRate);
 	_cpu.Init(&_memoryManager);
+	_tape.Init(_model, timing.CpuClockRate, &_cpu, &_beeper);
 }
 
 bool ZxMachine::LoadRom(const vector<uint8_t>& rom)
@@ -37,6 +38,8 @@ bool ZxMachine::LoadTape(const vector<uint8_t>& data, string& error)
 
 void ZxMachine::Reset()
 {
+	//The tape stays where it is (stopped)
+	_tape.Stop();
 	_memoryManager.Reset();
 	_ula.Reset();
 	_beeper.Init(ZxTiming::Get(_model).CpuClockRate);
@@ -59,6 +62,7 @@ void ZxMachine::RunFrame()
 		}
 		_cpu.Exec();
 	}
+	_tape.Update(frameEnd);
 	_ula.EndFrame();
 	_beeper.EndFrame(_ula.GetTiming().FrameLength);
 	if(HasAy()) {
@@ -84,4 +88,5 @@ void ZxMachine::Serialize(Serializer& s)
 	if(HasAy()) {
 		SV(_ay);
 	}
+	SV(_tape);
 }

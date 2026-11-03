@@ -20,6 +20,8 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 	[ObservableProperty][MinMax(0, 100)] public partial UInt32 BeeperVolume { get; set; } = 100;
 	[ObservableProperty][MinMax(0, 100)] public partial UInt32 AyVolume { get; set; } = 100;
 
+	[ObservableProperty] public partial bool FastForwardTape { get; set; } = true;
+
 	public void ApplyConfig()
 	{
 		Keyboard.Type = ControllerType.ZxKeyboard;
@@ -29,6 +31,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 			Model = Model,
 			BeeperVolume = BeeperVolume,
 			AyVolume = AyVolume,
+			FastForwardTape = FastForwardTape,
 		});
 	}
 
@@ -49,6 +52,8 @@ public struct InteropZxConfig
 
 	public UInt32 BeeperVolume;
 	public UInt32 AyVolume;
+
+	[MarshalAs(UnmanagedType.I1)] public bool FastForwardTape;
 }
 
 public enum ZxModel : byte
