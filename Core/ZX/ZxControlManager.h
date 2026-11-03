@@ -11,6 +11,8 @@ class ZxControlManager : public BaseControlManager
 private:
 	ZxConfig _prevConfig = {};
 
+	vector<uint16_t> GetJoystickKeys(ZxConfig& cfg);
+
 public:
 	ZxControlManager(Emulator* emu);
 
@@ -22,6 +24,7 @@ public:
 
 	//Copies the state of the keyboard device (host keys) into the machine's key matrix
 	void ApplyToMatrix(ZxKeyboard& keyboard);
-	//Connects/disconnects the Kempston joystick and copies its state
-	void ApplyToJoystick(ZxMemoryManager& memoryManager);
+	//Connects/disconnects the Kempston interface and copies the joystick's state into it, or presses the keys of a
+	//Sinclair/Cursor joystick (call after ApplyToMatrix)
+	void ApplyToJoystick(ZxMemoryManager& memoryManager, ZxKeyboard& keyboard);
 };

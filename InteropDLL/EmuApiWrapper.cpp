@@ -13,6 +13,7 @@
 #include "Core/Shared/CheatManager.h"
 #include "Core/Shared/DebuggerRequest.h"
 #include "Core/Netplay/GameClient.h"
+#include "Core/ZX/ZxConsole.h"
 #include "Utilities/ArchiveReader.h"
 #include "Utilities/FolderUtilities.h"
 #include "Utilities/StringUtilities.h"
@@ -323,6 +324,16 @@ extern "C"
 	DllExport void __stdcall ProcessTapeRecorderAction(TapeRecorderAction action, char* filename)
 	{
 		_emu->ProcessTapeRecorderAction(action, filename);
+	}
+
+	DllExport bool __stdcall SaveZxSnapshot(char* filename)
+	{
+		shared_ptr<IConsole> console = _emu->GetConsole();
+		if(ZxConsole* zxConsole = dynamic_cast<ZxConsole*>(console.get())) {
+			auto lock = _emu->AcquireLock();
+			return zxConsole->SaveSnapshot(filename);
+		}
+		return false;
 	}
 
 	DllExport void __stdcall ExecuteShortcut(ExecuteShortcutParams params)

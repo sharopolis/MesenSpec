@@ -281,6 +281,9 @@ enum class ControllerType
 	//ZX Spectrum
 	ZxKeyboard,
 	ZxKempston,
+	ZxSinclair1,
+	ZxSinclair2,
+	ZxCursor,
 };
 
 struct KeyMapping

@@ -18,6 +18,9 @@ namespace Mesen.ViewModels
 		public Enum[] AvailableJoystickTypes => new Enum[] {
 			ControllerType.None,
 			ControllerType.ZxKempston,
+			ControllerType.ZxSinclair1,
+			ControllerType.ZxSinclair2,
+			ControllerType.ZxCursor,
 		};
 
 		public ZxConfigViewModel()

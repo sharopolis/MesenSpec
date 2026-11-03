@@ -144,6 +144,18 @@ namespace Mesen.ViewModels
 					IsEnabled = () => File.Exists(Path.Combine(ConfigManager.RecentGamesFolder, MainWindow.RomInfo.GetRomName() + ".rgd"))
 				},
 
+				new MainMenuAction() {
+					ActionType = ActionType.ExportZxSnapshot,
+					IsVisible = () => IsZxGame,
+					IsEnabled = () => IsGameRunning,
+					OnClick = async () => {
+						string? filename = await FileDialogHelper.SaveFile(null, MainWindow.RomInfo.GetRomName() + ".z80", wnd, "z80", "sna");
+						if(filename != null) {
+							EmuApi.SaveZxSnapshot(filename);
+						}
+					}
+				},
+
 				new ContextMenuSeparator(),
 				new MainMenuAction() {
 					ActionType = ActionType.RecentFiles,

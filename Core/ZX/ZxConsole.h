@@ -77,6 +77,10 @@ public:
 	ShortcutState IsShortcutAllowed(EmulatorShortcut shortcut, uint32_t shortcutParam) override;
 	void ProcessNotification(ConsoleNotificationType type, void* parameter) override;
 
+	//Saves a .sna/.z80 snapshot (the format comes from the extension) - for other emulators/tools, Mesen's own save
+	//states keep more (e.g. the tape and the exact timing)
+	bool SaveSnapshot(string filename);
+
 	//ITapeRecorder - only playback (inserting a tape)
 	void ProcessTapeRecorderAction(TapeRecorderAction action, string filename) override;
 	bool IsRecording() override { return false; }

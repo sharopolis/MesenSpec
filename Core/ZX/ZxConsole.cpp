@@ -17,6 +17,7 @@
 #include "Shared/Movies/MovieManager.h"
 #include "Netplay/GameClient.h"
 #include "Utilities/VirtualFile.h"
+#include "Utilities/FolderUtilities.h"
 #include "Utilities/Serializer.h"
 
 ZxConsole::ZxConsole(Emulator* emu)
@@ -144,7 +145,7 @@ void ZxConsole::Reset()
 void ZxConsole::RunFrame()
 {
 	_controlManager->ApplyToMatrix(_machine->GetKeyboard());
-	_controlManager->ApplyToJoystick(_machine->GetMemoryManager());
+	_controlManager->ApplyToJoystick(_machine->GetMemoryManager(), _machine->GetKeyboard());
 	ApplyAutoKeys();
 
 	_machine->RunFrame();
@@ -379,6 +380,26 @@ void ZxConsole::ProcessNotification(ConsoleNotificationType type, void* paramete
 			}
 		}
 	}
+}
+
+bool ZxConsole::SaveSnapshot(string filename)
+{
+	//Called with the emulation lock held (between frames)
+	string ext = FolderUtilities::GetExtension(filename);
+	vector<uint8_t> data = _machine->SaveSnapshot(ext);
+	if(data.empty()) {
+		MessageManager::DisplayMessage("Error", "ZxSnapshotFormat");
+		return false;
+	}
+
+	ofstream file(filename, ios::out | ios::binary);
+	if(!file) {
+		MessageManager::DisplayMessage("Error", "CouldNotWriteToFile", filename);
+		return false;
+	}
+	file.write((char*)data.data(), data.size());
+	MessageManager::DisplayMessage("SaveStates", "ZxSnapshotSaved", FolderUtilities::GetFilename(filename, true));
+	return true;
 }
 
 void ZxConsole::ProcessTapeRecorderAction(TapeRecorderAction action, string filename)

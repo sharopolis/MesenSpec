@@ -6,8 +6,9 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
 - `Core/ZX/` - Spectrum core, registered in Mesen as ConsoleType/CpuType::Zx (files are listed in `Core.vcxproj`;
   the Linux makefile picks them up automatically).
   - `ZxConsole` (IConsole) wraps `ZxMachine` for Mesen: video (`ZxDefaultVideoFilter`), audio (beeper -> SoundMixer),
-    input (`ZxControlManager` + `Input/ZxKeyboardDevice`, keys mapped in `ZxConfig.Keyboard`; `Input/ZxKempstonJoystick`
-    on port 1 from `ZxConfig.Joystick`, copied into ZxMemoryManager each frame - port 0x1F, decoded on A5-A7 = 0), ROM via
+    input (`ZxControlManager` + `Input/ZxKeyboardDevice`, keys mapped in `ZxConfig.Keyboard`; `Input/ZxJoystick`
+    on port 1 from `ZxConfig.Joystick`: Kempston is copied into ZxMemoryManager each frame - port 0x1F, decoded on
+    A5-A7 = 0; Sinclair 1/2 and Cursor press keys in the matrix), ROM via
     `FirmwareHelper::LoadZxRom` (48.rom, or 128.rom / 128-0.rom + 128-1.rom, in Mesen's Firmware folder), auto-types
     LOAD "" for tapes (ENTER on the 128K menu). The model comes from `ZxConfig.Model` (snapshots use their own, from ZxSnapshot::GetModel).
   - `ZxCpu` - Z80 derived from `Core/SMS/SmsCpu`, with Fuse-style timing: every memory cycle and every internal
@@ -84,8 +85,12 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
   presets only, since the host keyboard is the Spectrum's). Lua names: up/down/left/right/fire. Note: upstream Mesen's
   emu.setInput reads the port from the 3rd argument (lua_settop(lua, 4) in LuaApi::SetInput) - use setInput(t, 0, port).
 - 128K snapshots: unit-tested round trips (both .sna layouts, AY in .z80), SF2 resumes from both; the real core loads
-  them as 128K whatever the model setting. Mesen's UI has no .sna/.z80 save yet (ZxRun --save does).
-- Next: +2/+3, TZX 0x19 (generalized data) / CSW, Sinclair/cursor joysticks, .sna/.z80 export from the UI.
+  them as 128K whatever the model setting. File > Export Snapshot saves .z80/.sna (ZxConsole::SaveSnapshot, through
+  InteropDLL SaveZxSnapshot).
+- Sinclair 1/2 and Cursor joysticks (ControllerType::ZxSinclair1/ZxSinclair2/ZxCursor, same ZxJoystick class and view):
+  verified through the test runner (each direction types the right digit at the BASIC prompt). Host keys bound to the
+  joystick don't also press Spectrum keys (ZxKeyboardDevice skips them - the arrows' CAPS+5-8 clashed with Sinclair).
+- Next: +2/+3, TZX 0x19 (generalized data) / CSW.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

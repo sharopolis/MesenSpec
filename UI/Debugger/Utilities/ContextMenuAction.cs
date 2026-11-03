@@ -693,6 +693,8 @@ namespace Mesen.Debugger.Utilities
 		[IconFile("MediaEject")]
 		EjectDisk,
 
+		[IconFile("SaveFloppy")]
+		ExportZxSnapshot,
 		[IconFile("Tape")]
 		InsertTape,
 		[IconFile("MediaPlay")]

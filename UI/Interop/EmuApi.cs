@@ -131,6 +131,7 @@ namespace Mesen.Interop
 
 		[DllImport(DllPath)] public static extern void InputBarcode(UInt64 barcode, UInt32 digitCount);
 		[DllImport(DllPath)] public static extern void ProcessTapeRecorderAction(TapeRecorderAction action, [MarshalAs(UnmanagedType.LPUTF8Str)] string filename = "");
+		[DllImport(DllPath)][return: MarshalAs(UnmanagedType.I1)] public static extern bool SaveZxSnapshot([MarshalAs(UnmanagedType.LPUTF8Str)] string filename);
 	}
 
 	public struct TimingInfo

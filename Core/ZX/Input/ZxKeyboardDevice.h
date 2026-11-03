@@ -5,8 +5,13 @@
 
 //The Spectrum keyboard as a Mesen input device: each of the 40 keys (and a few PC-style shortcuts for key
 //combinations) is mapped to a host key in the input settings (KeyMapping::CustomKeys).
+//Host keys that are also bound to the joystick only drive the joystick (like Fuse) - otherwise e.g. the arrow keys
+//would press both the joystick and CAPS SHIFT + 5-8, which clash with the Sinclair/Cursor joysticks' keys.
 class ZxKeyboardDevice : public BaseControlDevice
 {
+private:
+	vector<uint16_t> _joystickKeys;
+
 public:
 	//Buttons 0-39: row * 5 + key, in the order of ZxKeyboard::KeyNames. The rest are shortcuts.
 	enum Shortcuts
@@ -32,14 +37,18 @@ protected:
 	{
 		for(KeyMapping& keyMapping : _keyMappings) {
 			for(int i = 0; i < ButtonCount; i++) {
-				SetPressedState(i, keyMapping.CustomKeys[i]);
+				uint16_t keyCode = keyMapping.CustomKeys[i];
+				if(std::find(_joystickKeys.begin(), _joystickKeys.end(), keyCode) == _joystickKeys.end()) {
+					SetPressedState(i, keyCode);
+				}
 			}
 		}
 	}
 
 public:
-	ZxKeyboardDevice(Emulator* emu, KeyMappingSet keyMappings) : BaseControlDevice(emu, ControllerType::ZxKeyboard, 0, keyMappings)
+	ZxKeyboardDevice(Emulator* emu, KeyMappingSet keyMappings, vector<uint16_t> joystickKeys) : BaseControlDevice(emu, ControllerType::ZxKeyboard, 0, keyMappings)
 	{
+		_joystickKeys = joystickKeys;
 	}
 
 	//The machine reads the keyboard through ZxKeyboard - copy this device's state into it once per frame

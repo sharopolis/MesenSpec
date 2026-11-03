@@ -57,6 +57,8 @@ std::unordered_map<string, string> MessageManager::_enResources = {
 	{ "NetplayNotAllowed", u8"This action is not allowed while connected to a server." },
 	{ "OverclockEnabled", u8"Overclocking enabled." },
 	{ "OverclockDisabled", u8"Overclocking disabled." },
+	{ "ZxSnapshotFormat", u8"Snapshots can be saved as .sna or .z80 files." },
+	{ "ZxSnapshotSaved", u8"Snapshot saved: %1" },
 	{ "ZxTapeEjected", u8"Tape ejected." },
 	{ "ZxTapeEnd", u8"End of tape - rewind it or insert the next one." },
 	{ "ZxTapeInserted", u8"Tape inserted: %1" },
