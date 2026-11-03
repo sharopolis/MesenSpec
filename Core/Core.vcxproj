@@ -134,6 +134,7 @@
     <ClInclude Include="ZX\Debugger\ZxTraceLogger.h" />
     <ClInclude Include="ZX\IZxBus.h" />
     <ClInclude Include="ZX\Input\ZxKeyboardDevice.h" />
+    <ClInclude Include="ZX\Input\ZxKempstonJoystick.h" />
     <ClInclude Include="ZX\ZxAudioChannel.h" />
     <ClInclude Include="ZX\ZxAy.h" />
     <ClInclude Include="ZX\ZxBeeper.h" />

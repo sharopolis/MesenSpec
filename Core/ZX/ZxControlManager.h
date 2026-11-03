@@ -4,6 +4,7 @@
 #include "Shared/BaseControlManager.h"
 
 class ZxKeyboard;
+class ZxMemoryManager;
 
 class ZxControlManager : public BaseControlManager
 {
@@ -21,4 +22,6 @@ public:
 
 	//Copies the state of the keyboard device (host keys) into the machine's key matrix
 	void ApplyToMatrix(ZxKeyboard& keyboard);
+	//Connects/disconnects the Kempston joystick and copies its state
+	void ApplyToJoystick(ZxMemoryManager& memoryManager);
 };

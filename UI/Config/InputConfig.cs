@@ -419,6 +419,7 @@ namespace Mesen.Config
 
 		//ZX Spectrum
 		ZxKeyboard,
+		ZxKempston,
 	}
 
 	public static class ControllerTypeExtensions
@@ -446,6 +447,7 @@ namespace Mesen.Config
 				case ControllerType.Pcv2Controller:
 				case ControllerType.Pachinko:
 				case ControllerType.FcnsController:
+				case ControllerType.ZxKempston:
 					return true;
 			}
 
@@ -474,6 +476,7 @@ namespace Mesen.Config
 				case ControllerType.WsController:
 				case ControllerType.WsControllerVertical:
 				case ControllerType.Pcv2Controller:
+				case ControllerType.ZxKempston:
 					return true;
 			}
 
@@ -525,6 +528,7 @@ namespace Mesen.Config
 				case ControllerType.WsControllerVertical:
 				case ControllerType.Pcv2Controller:
 				case ControllerType.ZxKeyboard:
+				case ControllerType.ZxKempston:
 					return true;
 			}
 

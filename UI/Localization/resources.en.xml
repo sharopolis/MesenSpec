@@ -609,6 +609,10 @@
 			<Control ID="tabColecoVision">ColecoVision</Control>
 		</Form>
 
+		<Form ID="ZxJoystickView">
+			<Control ID="lblFire">Fire</Control>
+		</Form>
+
 		<Form ID="ZxConfigView">
 			<Control ID="tpgGeneral">General</Control>
 			<Control ID="lblModel">Model:</Control>
@@ -621,6 +625,7 @@
 
 			<Control ID="tpgInput">Input</Control>
 			<Control ID="lblKeyboard">Keyboard:</Control>
+			<Control ID="lblJoystick">Joystick:</Control>
 			<Control ID="lblKeyboardHint">Click Setup to map Spectrum keys to your keyboard. The shortcut keys (cursor keys, DELETE, EDIT, BREAK) press the matching CAPS SHIFT combinations.</Control>
 		</Form>
 
@@ -2092,6 +2097,7 @@ E
 			<Value ID="ColecoVisionController">ColecoVision Controller</Value>
 
 			<Value ID="ZxKeyboard">ZX Spectrum Keyboard</Value>
+			<Value ID="ZxKempston">Kempston Joystick</Value>
 		</Enum>
 		<Enum ID="ZxKeyboardButtons">
 			<Value ID="CapsShift">Key - CAPS SHIFT</Value>

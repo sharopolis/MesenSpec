@@ -432,6 +432,9 @@
     <Compile Update="Views\ZxConfigView.axaml.cs">
       <DependentUpon>ZxConfigView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\ZxJoystickView.axaml.cs">
+      <DependentUpon>ZxJoystickView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\CvConfigView.axaml.cs">
       <DependentUpon>CvConfigView.axaml</DependentUpon>
     </Compile>

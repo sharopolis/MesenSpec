@@ -57,7 +57,7 @@
 			</c:OptionSection>
 
 			<c:OptionSection Header="{l:Translate tpgInput}">
-				<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" HorizontalAlignment="Left">
+				<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
 					<TextBlock Grid.Row="0" Grid.Column="0" Text="{l:Translate lblKeyboard}" />
 					<c:InputComboBox
 						Grid.Row="0" Grid.Column="1"
@@ -66,8 +66,16 @@
 						ControllerType="{Binding Config.Keyboard.Type}"
 						AvailableValues="{Binding AvailableKeyboardTypes}"
 					/>
+					<TextBlock Grid.Row="1" Grid.Column="0" Text="{l:Translate lblJoystick}" />
+					<c:InputComboBox
+						Grid.Row="1" Grid.Column="1"
+						Port="1"
+						Config="{Binding Config.Joystick}"
+						ControllerType="{Binding Config.Joystick.Type}"
+						AvailableValues="{Binding AvailableJoystickTypes}"
+					/>
 					<TextBlock
-						Grid.Row="1" Grid.ColumnSpan="2"
+						Grid.Row="2" Grid.ColumnSpan="2"
 						Margin="0 5 0 0"
 						Foreground="{StaticResource MesenGrayTextColor}"
 						TextWrapping="Wrap"

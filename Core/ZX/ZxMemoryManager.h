@@ -14,7 +14,8 @@ class ZxTape;
 //- 48K: ROM, then 48K of RAM (0x4000-0x7FFF is shared with the ULA, and contended). The RAM array is linear.
 //- 128K: ROM 0 (128K editor) or ROM 1 (48K BASIC), RAM bank 5, bank 2 and any bank at 0xC000, selected through port
 //  0x7FFD. The RAM array holds the 8 banks in order. Odd banks are contended, the ULA displays bank 5 or 7.
-//The ULA answers every even port. The 128K's AY is at 0xFFFD (register select/read) and 0xBFFD (write).
+//The ULA answers every even port. The 128K's AY is at 0xFFFD (register select/read) and 0xBFFD (write), the Kempston
+//joystick (if connected) at 0x1F.
 class ZxMemoryManager final : public IZxBus, public ISerializable
 {
 private:
@@ -41,6 +42,11 @@ private:
 
 	//Last value written to port 0xFE
 	uint8_t _portFe = 0;
+
+	//Kempston joystick interface (port 0x1F): connected, and the state of its buttons (bits 0-4: right, left, down, up,
+	//fire - active high). Without it, the port reads the floating bus like any unattached port.
+	bool _kempstonConnected = false;
+	uint8_t _kempston = 0;
 
 	//Last value written to port 0x7FFD (128K paging: bits 0-2 RAM bank at 0xC000, bit 3 screen in bank 7,
 	//bit 4 ROM 1, bit 5 locks paging until the next reset)
@@ -78,6 +84,15 @@ public:
 
 	//Level of the EAR input (tape signal)
 	bool GetEarInput();
+
+	//Set before each frame from the input devices (the joystick is plugged in when connected is true)
+	void SetKempston(bool connected, uint8_t value)
+	{
+		_kempstonConnected = connected;
+		_kempston = value;
+	}
+	bool IsKempstonConnected() { return _kempstonConnected; }
+	uint8_t GetKempston() { return _kempston; }
 	uint8_t GetPortFe() { return _portFe; }
 	uint8_t GetPort7ffd() { return _port7ffd; }
 

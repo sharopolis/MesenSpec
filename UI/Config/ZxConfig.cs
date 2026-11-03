@@ -14,6 +14,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 	[ObservableProperty] public partial ConsoleOverrideConfig ConfigOverrides { get; set; } = new();
 
 	[ObservableProperty] public partial ZxControllerConfig Keyboard { get; set; } = new();
+	[ObservableProperty] public partial ZxControllerConfig Joystick { get; set; } = new();
 
 	[ObservableProperty] public partial ZxModel Model { get; set; } = ZxModel.Spectrum48K;
 
@@ -28,6 +29,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 
 		ConfigApi.SetZxConfig(new InteropZxConfig() {
 			Keyboard = Keyboard.ToInterop(),
+			Joystick = Joystick.ToInterop(),
 			Model = Model,
 			BeeperVolume = BeeperVolume,
 			AyVolume = AyVolume,
@@ -40,6 +42,13 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 		//The keyboard has a single fixed layout (no gamepad presets)
 		Keyboard.Type = ControllerType.ZxKeyboard;
 		Keyboard.Mapping1.SetDefaultKeys(ControllerType.ZxKeyboard);
+		InitializeJoystickDefaults(defaultMappings);
+	}
+
+	internal void InitializeJoystickDefaults(DefaultKeyMappingType defaultMappings)
+	{
+		//Kempston joystick on the gamepad presets only - the host keyboard is the Spectrum's keyboard
+		Joystick.InitDefaults<ZxKeyMapping>(defaultMappings & (DefaultKeyMappingType.Xbox | DefaultKeyMappingType.Ps4), ControllerType.ZxKempston);
 	}
 }
 
@@ -47,6 +56,7 @@ public partial class ZxConfig : BaseConfig<ZxConfig>
 public struct InteropZxConfig
 {
 	public InteropControllerConfig Keyboard;
+	public InteropControllerConfig Joystick;
 
 	public ZxModel Model;
 

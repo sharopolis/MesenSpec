@@ -132,6 +132,8 @@ namespace Mesen.Config
 
 			if(ConfigUpgrade < (int)ConfigUpgradeHint.ZxInput) {
 				Zx.InitializeDefaults(DefaultKeyMappings);
+			} else if(ConfigUpgrade < (int)ConfigUpgradeHint.ZxJoystick) {
+				Zx.InitializeJoystickDefaults(DefaultKeyMappings);
 			}
 
 			if(ConfigUpgrade < (int)ConfigUpgradeHint.WindowsAudioLatency) {
@@ -337,6 +339,7 @@ namespace Mesen.Config
 		WsInput,
 		WindowsAudioLatency,
 		ZxInput,
+		ZxJoystick,
 		NextValue,
 	}
 }

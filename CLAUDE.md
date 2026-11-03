@@ -6,7 +6,8 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
 - `Core/ZX/` - Spectrum core, registered in Mesen as ConsoleType/CpuType::Zx (files are listed in `Core.vcxproj`;
   the Linux makefile picks them up automatically).
   - `ZxConsole` (IConsole) wraps `ZxMachine` for Mesen: video (`ZxDefaultVideoFilter`), audio (beeper -> SoundMixer),
-    input (`ZxControlManager` + `Input/ZxKeyboardDevice`, keys mapped in `ZxConfig.Keyboard`), ROM via
+    input (`ZxControlManager` + `Input/ZxKeyboardDevice`, keys mapped in `ZxConfig.Keyboard`; `Input/ZxKempstonJoystick`
+    on port 1 from `ZxConfig.Joystick`, copied into ZxMemoryManager each frame - port 0x1F, decoded on A5-A7 = 0), ROM via
     `FirmwareHelper::LoadZxRom` (48.rom, or 128.rom / 128-0.rom + 128-1.rom, in Mesen's Firmware folder), auto-types
     LOAD "" for tapes (ENTER on the 128K menu). The model comes from `ZxConfig.Model` (snapshots force 48K for now).
   - `ZxCpu` - Z80 derived from `Core/SMS/SmsCpu`, with Fuse-style timing: every memory cycle and every internal
@@ -78,7 +79,10 @@ Fork of Mesen 2 (GPLv3) adding a ZX Spectrum core, so the Spectrum gets Mesen's 
   which Emulator falls back to on the console itself). OSD "End of tape" when the ROM waits past the last block.
   ZxConfig.FastForwardTape sets EmulationFlags::MaximumSpeed while the tape plays.
 - Real-time tape/TZX: Target Renegade's Speedlock 7 TZX loads (48K headless, 128K through Mesen's test runner).
-- Next: 128K snapshots (.sna/.z80), +2/+3, Kempston, TZX 0x19 (generalized data) / CSW.
+- Kempston joystick (ControllerType::ZxKempston, ZxJoystickView; config upgrade ZxJoystick gives it the gamepad
+  presets only, since the host keyboard is the Spectrum's). Lua names: up/down/left/right/fire. Note: upstream Mesen's
+  emu.setInput reads the port from the 3rd argument (lua_settop(lua, 4) in LuaApi::SetInput) - use setInput(t, 0, port).
+- Next: 128K snapshots (.sna/.z80), +2/+3, TZX 0x19 (generalized data) / CSW, Sinclair/cursor joysticks.
 - Windows build not yet verified with MSVC.
 - Unverified: exact ULA display timing for screen-memory writes (multicolour effects) and the floating bus read
   T-state - check with ULA test programs once the UI runs. OTIR/OTDR MEMPTR on repeat (see TODOZX in ZxCpu).

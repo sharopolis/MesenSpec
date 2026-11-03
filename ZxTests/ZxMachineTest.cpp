@@ -288,6 +288,46 @@ static void TestRealTimeTape(const vector<uint8_t>& rom)
 	CHECK(!zx->GetTape().IsPlaying(), "tape stopped after loading");
 }
 
+static void TestKempston(const vector<uint8_t>& rom)
+{
+	unique_ptr<ZxMachine> zx = CreateMachine(rom);
+	RunFrames(*zx, 100);
+	ZxMemoryManager& mm = zx->GetMemoryManager();
+	const uint8_t code[] = {
+		0xF3,                   //DI
+		0xDB, 0x1F,             //IN A,(0x1F) - Kempston
+		0x32, 0x00, 0x90,       //LD (0x9000),A
+		0x3E, 0x7F,             //LD A,0x7F
+		0xDB, 0xFE,             //IN A,(0xFE) - keyboard row (SPACE...B), not the joystick
+		0x32, 0x01, 0x90,       //LD (0x9001),A
+		0x18, 0xFE,             //JR $
+	};
+	auto run = [&]() {
+		for(size_t i = 0; i < sizeof(code); i++) {
+			mm.DirectWrite(0x8000 + (uint16_t)i, code[i]);
+		}
+		mm.DirectWrite(0x9000, 0xAA);
+		mm.DirectWrite(0x9001, 0xAA);
+		ZxCpuState& s = zx->GetCpu().GetState();
+		s.PC = 0x8000;
+		s.SP = 0xF000;
+		RunFrames(*zx, 1);
+	};
+
+	//Fire + up + right
+	mm.SetKempston(true, 0x19);
+	run();
+	CHECK(mm.Peek(0x9000) == 0x19, "kempston port: %02X", mm.Peek(0x9000));
+	CHECK((mm.Peek(0x9001) & 0x1F) == 0x1F, "keyboard unaffected by the joystick: %02X", mm.Peek(0x9001));
+	CHECK(mm.PeekPort(0x001F) == 0x19, "kempston peek: %02X", mm.PeekPort(0x001F));
+
+	//Unplugged: the port is unattached (floating bus - idle bus during the border here)
+	mm.SetKempston(false, 0x19);
+	run();
+	CHECK(mm.Peek(0x9000) != 0x19, "kempston disconnected: %02X", mm.Peek(0x9000));
+	CHECK(mm.PeekPort(0x001F) == 0xFF, "kempston disconnected peek: %02X", mm.PeekPort(0x001F));
+}
+
 static void TestSnapshots(const vector<uint8_t>& rom)
 {
 	//Enter a program, save a snapshot, load it in a new machine and run the program there
@@ -563,6 +603,7 @@ int main(int argc, char** argv)
 	TestSnapshots(rom);
 	TestTapeTrap(rom);
 	TestRealTimeTape(rom);
+	TestKempston(rom);
 
 	//128K tests, if its ROM is given (one 32K file or the two 16K halves)
 	vector<uint8_t> rom128;

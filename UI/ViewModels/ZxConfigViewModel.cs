@@ -15,6 +15,11 @@ namespace Mesen.ViewModels
 			ControllerType.ZxKeyboard,
 		};
 
+		public Enum[] AvailableJoystickTypes => new Enum[] {
+			ControllerType.None,
+			ControllerType.ZxKempston,
+		};
+
 		public ZxConfigViewModel()
 		{
 			Config = ConfigManager.Config.Zx;

@@ -279,7 +279,8 @@ enum class ControllerType
 	Pcv2Controller,
 
 	//ZX Spectrum
-	ZxKeyboard
+	ZxKeyboard,
+	ZxKempston,
 };
 
 struct KeyMapping
@@ -867,6 +868,7 @@ enum class ZxModel : uint8_t
 struct ZxConfig
 {
 	ControllerConfig Keyboard;
+	ControllerConfig Joystick;
 
 	ZxModel Model = ZxModel::Spectrum48K;
 

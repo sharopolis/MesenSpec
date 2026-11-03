@@ -35,6 +35,7 @@ namespace Mesen.Views
 					ControllerType.WsController => new WsControllerView(),
 					ControllerType.WsControllerVertical => new WsControllerVerticalView(),
 					ControllerType.Pcv2Controller => new WsPcv2ControllerView(),
+					ControllerType.ZxKempston => new ZxJoystickView(),
 					_ => new DefaultControllerView()
 				};
 			}

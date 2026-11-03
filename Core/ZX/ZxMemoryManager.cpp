@@ -146,6 +146,9 @@ uint8_t ZxMemoryManager::PeekPort(uint16_t port)
 	if(_ay && (port & 0xC002) == 0xC000) {
 		return _ay->ReadRegister();
 	}
+	if(_kempstonConnected && !(port & 0xE0)) {
+		return _kempston;
+	}
 	return 0xFF;
 }
 
@@ -186,6 +189,11 @@ uint8_t ZxMemoryManager::ReadPort(uint16_t port, uint64_t cycle)
 	if(_ay && (port & 0xC002) == 0xC000) {
 		//AY register (0xFFFD, decoded from A15, A14 and A1)
 		return _ay->ReadRegister();
+	}
+
+	if(_kempstonConnected && !(port & 0xE0)) {
+		//Kempston joystick (0x1F, decoded from A5-A7)
+		return _kempston;
 	}
 
 	return _ula->GetFloatingBusValue(cycle);

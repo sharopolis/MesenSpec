@@ -140,6 +140,7 @@ void ZxConsole::Reset()
 void ZxConsole::RunFrame()
 {
 	_controlManager->ApplyToMatrix(_machine->GetKeyboard());
+	_controlManager->ApplyToJoystick(_machine->GetMemoryManager());
 	ApplyAutoKeys();
 
 	_machine->RunFrame();

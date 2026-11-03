@@ -2628,6 +2628,9 @@
     <ClInclude Include="ZX\Input\ZxKeyboardDevice.h">
       <Filter>ZX\Input</Filter>
     </ClInclude>
+    <ClInclude Include="ZX\Input\ZxKempstonJoystick.h">
+      <Filter>ZX\Input</Filter>
+    </ClInclude>
     <ClInclude Include="ZX\ZxAudioChannel.h">
       <Filter>ZX</Filter>
     </ClInclude>
